@@ -3,6 +3,7 @@ package server.listener;
 import java.io.IOException;
 import java.util.List;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -19,6 +20,8 @@ public class BasicListener implements IWorldView {
 	Channel channel;
 	String sendTo;
 	BasicProperties properties;
+	long execTime;
+	JSONArray accu;
 	
 	public BasicListener(Channel c, String s) {
 		channel = c;
@@ -27,6 +30,7 @@ public class BasicListener implements IWorldView {
 	
 	public void setProps(BasicProperties p) {
 		properties = p;
+		accu = new JSONArray();
 	}
 	
 	public void setWorld(World w) {
@@ -62,18 +66,23 @@ public class BasicListener implements IWorldView {
 		// TODO explain why it's empty.
 	}
 
+	@SuppressWarnings("unchecked")
 	private void send(JSONObject msgItem) {
-		String message = "";
-		if(timer < 500) {
-			
+		long timer = System.currentTimeMillis() - this.execTime;
+		accu.add(msgItem);
+		if(timer > 500) {
+			this.execTime = System.currentTimeMillis();
+			send();
 		}
-		else {
-			try {
-				channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-			System.out.println(" [D] Sent stream message (" + properties.getCorrelationId() + ")");
+	}
+	
+	public void send() {
+		String message = accu.toJSONString();
+		try {
+			channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
+		System.out.println(" [D] Sent stream message (" + properties.getCorrelationId() + ")");
 	}
 }

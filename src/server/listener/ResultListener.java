@@ -52,16 +52,13 @@ public class ResultListener implements GameStateListener {
 			case DEMO_ENDED :
 			case EXECUTION_ENDED :
 				Exercise e = (Exercise) currGame.getCurrentLesson().getCurrentExercise();
+				Main.askEndStreamMain();
 				send(e.lastResult, currGame.i18n);
-				notifyMain();
+				Main.freeMain();
 				break;
 			default:
 				break;
 		}
-	}
-	
-	public void notifyMain() {
-		Main.endExercise.release();
 	}
 	
 	public void send(ExecutionProgress exPro, I18n i18n) {

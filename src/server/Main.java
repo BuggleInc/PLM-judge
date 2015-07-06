@@ -1,7 +1,10 @@
 package server;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeoutException;
 
 import plm.core.model.Game;
 import plm.core.model.LogHandler;
@@ -15,7 +18,9 @@ import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConsumerCancelledException;
 import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class Main {
 	private final static String QUEUE_NAME_REQUEST = "worker_in";
@@ -23,36 +28,75 @@ public class Main {
 	private final static LogHandler logger = new ServerLogHandler();
 	private static Game game = null;
 	public static Semaphore endExercise = new Semaphore(0);
+	private static String host;
+	private static BasicListener listener;
+	private static ResultListener resultLstn;
+	
+	private static Channel channelIn;
+	private static Channel channelOut;
+	
+	public static void askEndStreamMain() {
+		listener.send();
+	}
+	
+	public static void freeMain() {
+		endExercise.release();
+	}
 
-	public static void main(String[] argv) throws Exception {
-		String host = argv.length >= 1 ? argv[0] : "localhost";
-		
+	public static void initData() {
 		System.out.println("Started Worker on queue server at : " + host);
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
-		Connection connection = factory.newConnection();
-		Channel channelIn = connection.createChannel(),
-				channelOut = connection.createChannel();
-		channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, null);
-		channelOut.queueDeclare(QUEUE_NAME_REPLY, false, false, false, null);
-		// Create game.
-		System.out.println(" [D] Creating game.");
-		game = new Game("test", logger, Locale.FRENCH,"Java" , false);
-		BasicListener listener = new BasicListener(channelOut,  QUEUE_NAME_REPLY);
-		ResultListener resultLstn = new ResultListener(channelOut, QUEUE_NAME_REPLY);
+		Connection connection;
+		try {
+			connection = factory.newConnection();
+			channelIn = connection.createChannel();
+			channelOut = connection.createChannel();
+			channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, null);
+			channelOut.queueDeclare(QUEUE_NAME_REPLY, false, false, false, null);
+			
+			// Create game.
+			System.out.println(" [D] Creating game.");
+			game = new Game("test", logger, Locale.FRENCH,"Java" , false);
+			listener = new BasicListener(channelOut,  QUEUE_NAME_REPLY);
+			resultLstn = new ResultListener(channelOut, QUEUE_NAME_REPLY);
+		} catch (IOException | TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static void mainLoop() {
+
 		System.out.println(" [D] Waiting for request.");
-
 		QueueingConsumer consumer = new QueueingConsumer(channelIn);
-		channelIn.basicConsume(QUEUE_NAME_REQUEST, true, consumer);
-
+		try {
+			channelIn.basicConsume(QUEUE_NAME_REQUEST, true, consumer);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			
+		}
 		while (true) {
-			QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+			QueueingConsumer.Delivery delivery = null;
+			try {
+				delivery = consumer.nextDelivery();
+			} catch (ShutdownSignalException | ConsumerCancelledException
+					| InterruptedException e2) {
+				e2.printStackTrace();
+				return;
+			}
 			BasicProperties props = delivery.getProperties();
 		    BasicProperties replyProps = new BasicProperties
                     .Builder()
                     .correlationId(props.getCorrelationId())
                     .build();
-			String message = new String(delivery.getBody(),"UTF-8");
+			String message = "";
+			try {
+				message = new String(delivery.getBody(),"UTF-8");
+			} catch (UnsupportedEncodingException e1) {
+				e1.printStackTrace();
+			}
 			System.out.println(" [D] Received request from '" + props.getCorrelationId() + "'.");
 			RequestMsg request = RequestMsg.readMessage(message);
 			// Setting return data
@@ -86,8 +130,18 @@ public class Main {
 			// Start the game.
 			game.startExerciseExecution();
 			// Delete the game instance.
-			endExercise.acquire();
+			try {
+				endExercise.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			System.out.println(" [D] Ended compilation.");
 		}
+	}
+
+	public static void main(String[] argv) {
+		host = argv.length >= 1 ? argv[0] : "localhost";
+		initData();
+		mainLoop();
 	}
 }
