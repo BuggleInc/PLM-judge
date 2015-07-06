@@ -4,7 +4,7 @@ This is a standalone program intended to serve as the compilation unit for the P
 
 The PLM project can be found at : https://github.com/oster/PLM
 
-The WebPLM project can be found at : https://github.com/MatthieuNICOLAS/webPLM
+The WebPLM project can be found at : https://github.com/BuggleInc/webPLM
 
 ### How to :
 To use the worker, you need to launch it using the command :
@@ -13,6 +13,6 @@ To use the worker, you need to launch it using the command :
 An easier use will be available later, ultimatly leading to a docker file.
 
 Note that this program is intended to be used with the "separation-webPLM" branch of WebPLM. You can find it here :
-https://github.com/TanguyGloaguen/webPLM/tree/separation-WebPLM
+https://github.com/BuggleInc/webPLM/tree/split
 
 This code is WiP. Use it at your own risk.
