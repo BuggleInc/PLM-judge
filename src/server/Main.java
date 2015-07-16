@@ -8,7 +8,6 @@ import java.util.concurrent.TimeoutException;
 
 import plm.core.model.Game;
 import plm.core.model.LogHandler;
-import plm.core.model.lesson.ExecutionProgress;
 import plm.core.model.lesson.Exercise;
 import server.listener.BasicListener;
 import server.listener.ResultListener;
@@ -29,6 +28,7 @@ public class Main {
 	private static Game game = null;
 	public static Semaphore endExercise = new Semaphore(0);
 	private static String host;
+	private static String port;
 	private static BasicListener listener;
 	private static ResultListener resultLstn;
 	
@@ -47,6 +47,7 @@ public class Main {
 		System.out.println("Started Worker on queue server at : " + host);
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
+		factory.setPort(Integer.parseInt(port));
 		Connection connection;
 		try {
 			connection = factory.newConnection();
@@ -63,6 +64,7 @@ public class Main {
 		} catch (IOException | TimeoutException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			
 		}
 	}
 	
@@ -111,7 +113,6 @@ public class Main {
 				System.err.println(" [E] Error while setting Locale. (original message : '" + message + "'");
 				e.printStackTrace();
 			}
-			ExecutionProgress exPro;
 			try {
 				game.setProgrammingLanguage(request.getLanguage());
 			}
@@ -131,7 +132,10 @@ public class Main {
 			game.startExerciseExecution();
 			// Delete the game instance.
 			try {
-				endExercise.acquire();
+				if(!endExercise.tryAcquire(30, java.util.concurrent.TimeUnit.SECONDS)) {
+					game.stopExerciseExecution();
+				}
+					
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -140,7 +144,12 @@ public class Main {
 	}
 
 	public static void main(String[] argv) {
-		host = argv.length >= 1 ? argv[0] : "localhost";
+		host = System.getenv("MESSAGEQ_PORT_5672_TCP_ADDR") != null
+				? System.getenv("MESSAGEQ_PORT_5672_TCP_ADDR")
+				: "localhost";
+		port = System.getenv("MESSAGEQ_PORT_5672_TCP_PORT") != null
+				? System.getenv("MESSAGEQ_PORT_5672_TCP_PORT")
+				: "5672";
 		initData();
 		mainLoop();
 	}
