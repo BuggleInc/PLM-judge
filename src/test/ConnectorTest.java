@@ -30,6 +30,7 @@ import server.Connector;
 import server.Main;
 
 public class ConnectorTest extends Connector {
+	public final static int MAX_LEN = 500;
 	
 	@Override
 	public void init(String host, int port) {
@@ -161,7 +162,7 @@ public class ConnectorTest extends Connector {
 		@Override
 		public void basicPublish(String arg0, String arg1, BasicProperties arg2, byte[] arg3) throws IOException {
 			String msg = (new String(arg3,"UTF-8"));
-			Main.logger.log(-1, "Sent : " + msg.substring(0, msg.length()>100?100:msg.length()));
+			Main.logger.log(-1, "Sent : " + msg.substring(0, msg.length()>MAX_LEN?MAX_LEN:msg.length()));
 			Main.logger.log(-1, "On : " + arg1);
 		}
 	
