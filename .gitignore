@@ -24,3 +24,6 @@ node_modules/
 .bundle
 cachedir/
 .cache-main
+bin_tests/
+bin_gen/
+*.bat

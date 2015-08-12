@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.xnap.commons.i18n.I18n;
 
+import server.Connector;
+import server.GameGest;
 import server.Main;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -16,16 +18,34 @@ import plm.core.model.lesson.ExecutionProgress;
 import plm.core.model.lesson.Exercise;
 import server.parser.ReplyMsg;
 
+/**
+ * The {@link GameStateListener} implementation. It reacts when the game state changes, notifying the {@link Main} class and the {@link BasicListener}.
+ * @author Tanguy
+ *
+ */
 public class ResultListener implements GameStateListener {
 
 	private Game currGame;
 	Channel channel;
 	String sendTo;
 	BasicProperties properties;
+	GameGest parent;
 	
-	public ResultListener(Channel c, String s) {
-		channel = c;
-		sendTo = s;
+	/**
+	 * The {@link ResultListener} constructor.
+	 * @param connector the used connector
+	 * @param lstn The basic listener to activate for stream end.
+	 */
+	public ResultListener(Connector connector, GameGest parent) {
+		this.channel = connector.cOut();
+		this.sendTo = connector.cOutName();
+		this.parent = parent;
+	}
+	
+	private ResultListener(Channel c, String sTo, GameGest parent) {
+		this.channel = c;
+		this.sendTo = sTo;
+		this.parent = parent;
 	}
 	
 	public void setProps(BasicProperties p) {
@@ -41,20 +61,20 @@ public class ResultListener implements GameStateListener {
 	
 	@Override
 	public ResultListener clone() {
-		ResultListener res = new ResultListener(channel, sendTo);
-		res.setGame(currGame);
-		return res;
+		ResultListener copy = new ResultListener(channel, sendTo, parent);
+		copy.setProps(properties);
+		copy.setGame(currGame);
+		return this;
 	}
 
 	@Override
 	public void stateChanged(GameState state) {
 		switch(state) {
-			case DEMO_ENDED :
 			case EXECUTION_ENDED :
 				Exercise e = (Exercise) currGame.getCurrentLesson().getCurrentExercise();
-				Main.askEndStreamMain();
+				parent.sendStream();
 				send(e.lastResult, currGame.i18n);
-				Main.freeMain();
+				parent.free();
 				break;
 			default:
 				break;
@@ -69,6 +89,6 @@ public class ResultListener implements GameStateListener {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
-		System.out.println(" [D] Sent end comm. message (" + properties.getCorrelationId() + ")");
+		Main.logger.log(0, "Sent end comm. message (" + properties.getCorrelationId() + ")");
 	}
 }

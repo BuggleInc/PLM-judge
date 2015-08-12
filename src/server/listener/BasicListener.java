@@ -9,11 +9,22 @@ import org.json.simple.JSONObject;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 
+import plm.core.model.Game;
 import plm.universe.Entity;
 import plm.universe.IWorldView;
 import plm.universe.World;
+import server.Connector;
+import server.Main;
 import server.parser.StreamMsg;
 
+/**
+ * The {@link IWorldView} implementation. Linked to the current {@link Game} instance, and is called every time the world moves. 
+ * <p>
+ * It does two things : first, it creates update chunks via {@link StreamMsg} to describe the world movement.
+ * It also aggregates these messages to send them to the given {@link Channel} at least past the given time delay.
+ * @author Tanguy
+ * @see StreamMsg
+ */
 public class BasicListener implements IWorldView {
 
 	private World currWorld = null;
@@ -21,30 +32,52 @@ public class BasicListener implements IWorldView {
 	String sendTo;
 	BasicProperties properties;
 	long execTime;
+	long timeout;
 	JSONArray accu;
 	
-	public BasicListener(Channel c, String s) {
-		channel = c;
-		sendTo = s;
+	/**
+	 * The {@link BasicListener} constructor.
+	 * @param connector the used connector
+	 * @param timeout The minimal time between two stream messages. Set to 0 to stream each operation individually.
+	 */
+	public BasicListener(Connector connector, long timeout) {
+		this.timeout = timeout;
+		this.channel = connector.cOut();
+		this.sendTo = connector.cOutName();
 	}
 	
-	public void setProps(BasicProperties p) {
-		properties = p;
+	private BasicListener(Channel c, String sTo, long t) {
+		this.timeout = t;
+		this.channel = c;
+		this.sendTo = sTo;
+	}
+	
+	/**
+	 * Set the reply properties value. Also, reset the accumulation queue.
+	 * @param properties The properties sent with each message
+	 */
+	public void setProps(BasicProperties properties) {
+		this.properties = properties;
 		accu = new JSONArray();
 	}
 	
-	public void setWorld(World w) {
+	/**
+	 * Set or replaces the game world to listen to.
+	 * @param world
+	 */
+	public void setWorld(World world) {
 		if(currWorld != null)
 			currWorld.removeWorldUpdatesListener(this);
-		currWorld = w;
+		currWorld = world;
 		currWorld.addWorldUpdatesListener(this);
 	}
 	
 	@Override
 	public BasicListener clone() {
-		BasicListener res = new BasicListener(channel, sendTo);
-		res.setWorld(currWorld);
-		return res;
+		BasicListener copy = new BasicListener(channel, sendTo, timeout);
+		copy.setProps(properties);
+		copy.setWorld(currWorld);
+		return copy;
 	}
 	
 	@Override
@@ -53,9 +86,9 @@ public class BasicListener implements IWorldView {
 		for(Entity element : l) {
 			if(element.isReadyToSend()) {
 				StreamMsg streamMsg = new StreamMsg(currWorld, element.getOperations());
-				JSONObject message = streamMsg.result();
 				element.getOperations().clear();
 				element.setReadyToSend(false);
+				JSONObject message = streamMsg.result();
 				send(message);
 			}
 		}
@@ -63,26 +96,51 @@ public class BasicListener implements IWorldView {
 
 	@Override
 	public void worldHasChanged() {
-		// TODO explain why it's empty.
+		// NO OP
 	}
 
+	/**
+	 * 
+	 * @param msg the message to send as MessageStream
+	 */
+	@SuppressWarnings("unchecked")
+	public void streamOut(String msg) {
+		JSONObject res = new JSONObject();
+		res.put("type", "outputStream");
+		res.put("msg", msg);
+		send(res);
+	}
+	
+	/**
+	 * Sends the given message, or accumulates it if the timeout isn't reached. This method is private.
+	 * @param msgItem the JSON message to be send.
+	 * @see StreamMsg
+	 */
 	@SuppressWarnings("unchecked")
 	private void send(JSONObject msgItem) {
 		long timer = System.currentTimeMillis() - this.execTime;
 		accu.add(msgItem);
-		if(timer > 500) {
+		if(timer > timeout) {
 			this.execTime = System.currentTimeMillis();
 			send();
+			accu.clear();
 		}
 	}
 	
+	/**
+	 * Sends all accumulated messages.
+	 */
+	@SuppressWarnings("unchecked")
 	public void send() {
-		String message = accu.toJSONString();
+		JSONObject msgJson = new JSONObject();
+		msgJson.put("type", "stream");
+		msgJson.put("content", accu);
+		String message = msgJson.toJSONString();
 		try {
 			channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
-		System.out.println(" [D] Sent stream message (" + properties.getCorrelationId() + ")");
+		Main.logger.log(0, "Sent stream message (" + properties.getCorrelationId() + ")");
 	}
 }

@@ -5,10 +5,20 @@ import org.xnap.commons.i18n.I18n;
 
 import plm.core.model.lesson.ExecutionProgress;
 
+/**
+ * Generates a ReplyMsg form the 
+ * @author Tanguy
+ *
+ */
 public class ReplyMsg {
 
 	String result;
 	
+	/**
+	 * Generates a ReplyMsg from the internationalization parameter {@link I18n} and the last execution progress result.
+	 * @param lastResult The last exercises' result.
+	 * @param i18n The internationalization parameter for message output.
+	 */
 	@SuppressWarnings("unchecked")
 	public ReplyMsg(ExecutionProgress lastResult, I18n i18n) {
 		int type = lastResult.outcome == ExecutionProgress.outcomeKind.PASS ? 1 : 0;
@@ -45,9 +55,14 @@ public class ReplyMsg {
 		res.put("msgType", type);
 		res.put("msg", msg);
 		res.put("git_logs", gitReply);
+		res.put("type", "result");
 		result = res.toJSONString();
 	}
 	
+	/**
+	 * Outputs as a JSON-formatted {@link String}
+	 * @return
+	 */
 	public String toJSON() {
 		return result;
 	}
