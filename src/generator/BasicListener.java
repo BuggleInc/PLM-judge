@@ -122,7 +122,6 @@ public class BasicListener implements IWorldView {
 	/**
 	 * Sends all accumulated messages.
 	 */
-	@SuppressWarnings("unchecked")
 	public JSONArray send() {
 		return accu;
 	}

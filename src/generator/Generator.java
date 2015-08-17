@@ -11,15 +11,12 @@ import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 
 import generator.parser.WorldParser;
-import plm.core.model.lesson.Exercise;
 import plm.core.model.lesson.Lecture;
 import plm.core.model.lesson.Lesson;
 import plm.universe.World;

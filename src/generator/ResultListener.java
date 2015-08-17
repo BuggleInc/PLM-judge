@@ -14,7 +14,6 @@ import plm.core.GameStateListener;
 import plm.core.model.Game;
 import plm.core.model.Game.GameState;
 import plm.core.model.lesson.ExecutionProgress;
-import plm.core.model.lesson.Exercise;
 import server.parser.ReplyMsg;
 
 /**

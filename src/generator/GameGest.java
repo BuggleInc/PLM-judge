@@ -1,7 +1,6 @@
 package generator;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -21,7 +20,6 @@ import plm.core.model.lesson.Exercise;
 import plm.core.model.lesson.Exercise.WorldKind;
 import plm.core.model.lesson.Lecture;
 import plm.core.model.lesson.Lesson;
-import plm.core.utils.FileUtils;
 import plm.universe.World;
 import server.Connector;
 
