@@ -132,15 +132,17 @@ public class BasicListener implements IWorldView {
 	 */
 	@SuppressWarnings("unchecked")
 	public void send() {
-		JSONObject msgJson = new JSONObject();
-		msgJson.put("type", "stream");
-		msgJson.put("content", accu);
-		String message = msgJson.toJSONString();
-		try {
-			channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		if(!accu.isEmpty()) {
+			JSONObject msgJson = new JSONObject();
+			msgJson.put("type", "stream");
+			msgJson.put("content", accu);
+			String message = msgJson.toJSONString();
+			try {
+				channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			Main.logger.log(0, "Sent stream message (" + properties.getCorrelationId() + ")");
 		}
-		Main.logger.log(0, "Sent stream message (" + properties.getCorrelationId() + ")");
 	}
 }
