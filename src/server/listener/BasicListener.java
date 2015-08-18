@@ -31,8 +31,8 @@ public class BasicListener implements IWorldView {
 	Channel channel;
 	String sendTo;
 	BasicProperties properties;
-	long execTime;
-	long timeout;
+	long lastTime = System.currentTimeMillis();
+	long delay;
 	JSONArray accu;
 	
 	/**
@@ -40,14 +40,14 @@ public class BasicListener implements IWorldView {
 	 * @param connector the used connector
 	 * @param timeout The minimal time between two stream messages. Set to 0 to stream each operation individually.
 	 */
-	public BasicListener(Connector connector, long timeout) {
-		this.timeout = timeout;
+	public BasicListener(Connector connector, long delay) {
+		this.delay = delay;
 		this.channel = connector.cOut();
 		this.sendTo = connector.cOutName();
 	}
 	
-	private BasicListener(Channel c, String sTo, long t) {
-		this.timeout = t;
+	private BasicListener(Channel c, String sTo, long d) {
+		this.delay = d;
 		this.channel = c;
 		this.sendTo = sTo;
 	}
@@ -66,17 +66,14 @@ public class BasicListener implements IWorldView {
 	 * @param world
 	 */
 	public void setWorld(World world) {
-		if(currWorld != null)
-			currWorld.removeWorldUpdatesListener(this);
 		currWorld = world;
 		currWorld.addWorldUpdatesListener(this);
 	}
 	
 	@Override
 	public BasicListener clone() {
-		BasicListener copy = new BasicListener(channel, sendTo, timeout);
+		BasicListener copy = new BasicListener(channel, sendTo, delay);
 		copy.setProps(properties);
-		copy.setWorld(currWorld);
 		return copy;
 	}
 	
@@ -88,8 +85,10 @@ public class BasicListener implements IWorldView {
 				StreamMsg streamMsg = new StreamMsg(currWorld, element.getOperations());
 				element.getOperations().clear();
 				element.setReadyToSend(false);
-				JSONObject message = streamMsg.result();
-				send(message);
+				addOperations(streamMsg.result());
+				if(lastTime+delay <= System.currentTimeMillis()) {
+					send();
+		        }
 			}
 		}
 	}
@@ -108,23 +107,12 @@ public class BasicListener implements IWorldView {
 		JSONObject res = new JSONObject();
 		res.put("type", "outputStream");
 		res.put("msg", msg);
-		send(res);
+		addOperations(res);
 	}
 	
-	/**
-	 * Sends the given message, or accumulates it if the timeout isn't reached. This method is private.
-	 * @param msgItem the JSON message to be send.
-	 * @see StreamMsg
-	 */
 	@SuppressWarnings("unchecked")
-	private void send(JSONObject msgItem) {
-		long timer = System.currentTimeMillis() - this.execTime;
+	private void addOperations(JSONObject msgItem) {
 		accu.add(msgItem);
-		if(timer > timeout) {
-			this.execTime = System.currentTimeMillis();
-			send();
-			accu.clear();
-		}
 	}
 	
 	/**
@@ -133,6 +121,7 @@ public class BasicListener implements IWorldView {
 	@SuppressWarnings("unchecked")
 	public void send() {
 		if(!accu.isEmpty()) {
+			lastTime = System.currentTimeMillis();
 			JSONObject msgJson = new JSONObject();
 			msgJson.put("type", "stream");
 			msgJson.put("content", accu);
@@ -143,6 +132,7 @@ public class BasicListener implements IWorldView {
 				ex.printStackTrace();
 			}
 			Main.logger.log(0, "Sent stream message (" + properties.getCorrelationId() + ")");
+			accu.clear();
 		}
 	}
 }
