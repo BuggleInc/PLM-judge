@@ -46,47 +46,45 @@ public class Main {
 	public static void mainLoop() {
 		logger.log(0, "Retrieving request handler.");
 		connector.prepDelivery();
-		while (true) {
-			try {
-				logger.log(0, "Creating game.");
-				gest = new GameGest(connector, logger);
-			}
-			catch (Exception e) {
-				logger.log(2, "Error while creating game. Aborting...");
-			}
-			logger.log(0, "Waiting for request [" + host + ":" + port + "]");
-			QueueingConsumer.Delivery delivery = connector.getDelivery();
-			BasicProperties props = delivery.getProperties();
-		    BasicProperties replyProps = new BasicProperties
-                    .Builder()
-                    .correlationId(props.getCorrelationId())
-                    .expiration("60000")
-                    .build();
-			String message = "";
-			try {
-				message = new String(delivery.getBody(),"UTF-8");
-			} catch (UnsupportedEncodingException e1) {
-				e1.printStackTrace();
-			}
-			
-			logger.log(0, "Received request from '" + props.getCorrelationId() + "'.");
-			sendAck(replyProps);
-			logger.log(0, "Send ack");
-			RequestMsg request = RequestMsg.readMessage(message);
-			logger.log(0, "Setting game properties.");
-			// Set game state
-			gest.setGameState(Locale.forLanguageTag(request.getLocale()), request.getLanguage(), request.getLessonID(), request.getExerciseID());
-			// Setting return data
-			gest.setProperties(replyProps);
-			// Put code in compiler.
-			logger.log(0, "Starting compilation.");
-			gest.setCode(request.getCode());
-			logger.log(0, "Starting execution.");
-			// Start the game.
-			gest.startGame(30);
-			logger.log(0, "Ended compilation.");
-			gest.stop();
+		try {
+			logger.log(0, "Creating game.");
+			gest = new GameGest(connector, logger);
 		}
+		catch (Exception e) {
+			logger.log(2, "Error while creating game. Aborting...");
+		}
+		logger.log(0, "Waiting for request [" + host + ":" + port + "]");
+		QueueingConsumer.Delivery delivery = connector.getDelivery();
+		BasicProperties props = delivery.getProperties();
+	    BasicProperties replyProps = new BasicProperties
+                .Builder()
+                .correlationId(props.getCorrelationId())
+                .expiration("60000")
+                .build();
+		String message = "";
+		try {
+			message = new String(delivery.getBody(),"UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
+		
+		logger.log(0, "Received request from '" + props.getCorrelationId() + "'.");
+		sendAck(replyProps);
+		logger.log(0, "Send ack");
+		RequestMsg request = RequestMsg.readMessage(message);
+		logger.log(0, "Setting game properties.");
+		// Set game state
+		gest.setGameState(Locale.forLanguageTag(request.getLocale()), request.getLanguage(), request.getLessonID(), request.getExerciseID());
+		// Setting return data
+		gest.setProperties(replyProps);
+		// Put code in compiler.
+		logger.log(0, "Starting compilation.");
+		gest.setCode(request.getCode());
+		logger.log(0, "Starting execution.");
+		// Start the game.
+		gest.startGame(30);
+		logger.log(0, "Ended compilation.");
+		gest.stop();
 	}
 	
 	@SuppressWarnings("unchecked")
