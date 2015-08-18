@@ -33,7 +33,7 @@ public class BasicListener implements IWorldView {
 	BasicProperties properties;
 	long lastTime = System.currentTimeMillis();
 	long delay;
-	JSONArray accu;
+	JSONArray accu = new JSONArray();
 	
 	/**
 	 * The {@link BasicListener} constructor.
@@ -53,12 +53,11 @@ public class BasicListener implements IWorldView {
 	}
 	
 	/**
-	 * Set the reply properties value. Also, reset the accumulation queue.
+	 * Set the reply properties value.
 	 * @param properties The properties sent with each message
 	 */
 	public void setProps(BasicProperties properties) {
 		this.properties = properties;
-		accu = new JSONArray();
 	}
 	
 	/**

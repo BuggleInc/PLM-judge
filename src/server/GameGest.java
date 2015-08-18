@@ -30,7 +30,7 @@ public class GameGest {
 		resultLstn = new ResultListener(connector, this);
 		listenerOut = new ListenerOutStream(System.out, listener);
 		PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
-        System.setOut(outStream); 
+        System.setOut(outStream);
 	}
 	
 	public void setGameState(Locale locale, String language, String lessonID, String exerciseID) {
@@ -78,12 +78,14 @@ public class GameGest {
 	}
 	
 	public void setProperties(BasicProperties properties) {
+		listener.setProps(properties);
 		for(BasicListener l : lCumul)
 			l.setProps(properties);
 		resultLstn.setProps(properties);
 	}
 	
 	public void sendStream() {
+		listener.send();
 		for(BasicListener l : lCumul)
 			l.send();
 	}
