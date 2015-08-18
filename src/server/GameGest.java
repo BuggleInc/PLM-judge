@@ -11,6 +11,7 @@ import plm.core.model.Game;
 import plm.core.model.LogHandler;
 import plm.core.model.lesson.Exercise;
 import plm.core.model.lesson.Exercise.WorldKind;
+import plm.core.model.lesson.Lecture;
 import plm.universe.World;
 import server.listener.BasicListener;
 import server.listener.ResultListener;
@@ -25,7 +26,7 @@ public class GameGest {
 	
 	public GameGest(Connector connector, LogHandler logger) {
 		game = new Game("test", logger, Locale.FRENCH,"Java" , false);
-		listener = new BasicListener(connector, 500);
+		listener = new BasicListener(connector, 1000);
 		resultLstn = new ResultListener(connector, this);
 		listenerOut = new ListenerOutStream(System.out, listener);
 		PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
@@ -47,12 +48,13 @@ public class GameGest {
 			System.err.println(" [E] Error while setting Prog. Language.");
 			e.printStackTrace();
 		}
-		game.switchLesson(lessonID, false);
+		game.switchLesson(lessonID, true);
 		game.switchExercise(exerciseID);
 		lCumul = new ArrayList<BasicListener>();
 		// Bind listener to game
-		listener.setWorld(game.getSelectedWorld());
-		for(World w : ((Exercise) game.getCurrentLesson().getCurrentExercise()).getWorlds(WorldKind.CURRENT)) {
+		Lecture lect = game.getCurrentLesson().getCurrentExercise();
+		Exercise exo = (Exercise) lect;
+		for(World w : exo.getWorlds(WorldKind.CURRENT)) {
 			BasicListener l = listener.clone();
 			l.setWorld(w);
 			lCumul.add(l);
@@ -76,14 +78,12 @@ public class GameGest {
 	}
 	
 	public void setProperties(BasicProperties properties) {
-		listener.setProps(properties);
 		for(BasicListener l : lCumul)
 			l.setProps(properties);
 		resultLstn.setProps(properties);
 	}
 	
 	public void sendStream() {
-		listener.send();
 		for(BasicListener l : lCumul)
 			l.send();
 	}
