@@ -1,7 +1,10 @@
 package server;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
+
+import org.json.simple.JSONObject;
 
 import plm.core.model.Game;
 import plm.core.model.LogHandler;
@@ -9,6 +12,7 @@ import server.parser.*;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.Channel;
 
 /**
  * The main class. This should be the entry point of the Judge.
@@ -64,7 +68,10 @@ public class Main {
 			} catch (UnsupportedEncodingException e1) {
 				e1.printStackTrace();
 			}
+			
 			logger.log(0, "Received request from '" + props.getCorrelationId() + "'.");
+			sendAck(replyProps);
+			logger.log(0, "Send ack");
 			RequestMsg request = RequestMsg.readMessage(message);
 			logger.log(0, "Setting game properties.");
 			// Set game state
@@ -81,7 +88,23 @@ public class Main {
 			gest.stop();
 		}
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	public static void sendAck(BasicProperties properties) {
+		Channel channel = connector.cOut();
+		JSONObject msgJson = new JSONObject();
+		msgJson.put("type", "ack");
+		String message = msgJson.toJSONString();
+		String sendTo = connector.cOutName();
+		try {
+			channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] argv) {
 		host = System.getenv("MESSAGEQ_PORT_5672_TCP_ADDR");
 		port = System.getenv("MESSAGEQ_PORT_5672_TCP_PORT");
