@@ -9,6 +9,7 @@ public class Connector {
 	private final static String QUEUE_NAME_REQUEST = "worker_in";
 	private final static String QUEUE_NAME_REPLY = "worker_out";
 	
+	private Connection connection;
 	protected Channel channelIn;
 	protected Channel channelOut;
 	
@@ -18,7 +19,6 @@ public class Connector {
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
 		factory.setPort(port);
-		Connection connection;
 		try {
 			connection = factory.newConnection();
 			channelIn = connection.createChannel();
@@ -31,6 +31,18 @@ public class Connector {
 	    } catch (TimeoutException e) {
 	    	Main.logger.log(2, "Host timed out. Aborting...");
 			System.exit(1);
+		}
+	}
+	
+	public void closeConnections() {
+		try {
+			channelIn.close();
+			channelOut.close();
+			connection.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			e.printStackTrace();
 		}
 	}
 	

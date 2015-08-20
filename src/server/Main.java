@@ -85,6 +85,7 @@ public class Main {
 		gest.startGame(30);
 		logger.log(0, "Ended compilation.");
 		gest.stop();
+		connector.closeConnections();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -110,5 +111,6 @@ public class Main {
 		port = port != null ? port : "5672";
 		initData();
 		mainLoop();
+		System.exit(0);
 	}
 }
