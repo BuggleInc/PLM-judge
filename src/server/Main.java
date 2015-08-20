@@ -59,7 +59,7 @@ public class Main {
 	    BasicProperties replyProps = new BasicProperties
                 .Builder()
                 .correlationId(props.getCorrelationId())
-                .expiration("60000")
+                .expiration("5000")
                 .build();
 		String message = "";
 		try {
@@ -82,7 +82,7 @@ public class Main {
 		gest.setCode(request.getCode());
 		logger.log(0, "Starting execution.");
 		// Start the game.
-		gest.startGame(30);
+		gest.startGame(10);
 		logger.log(0, "Ended compilation.");
 		gest.stop();
 		connector.closeConnections();
