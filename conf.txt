@@ -1,0 +1,3 @@
+grant codeBase "file:/app/webPLM_Worker/-" {
+	permission java.security.AllPermission;
+};
