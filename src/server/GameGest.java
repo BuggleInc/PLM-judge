@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
-
 import plm.core.model.Game;
 import plm.core.model.LogHandler;
 import plm.core.model.lesson.Exercise;
@@ -75,13 +73,6 @@ public class GameGest {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public void setProperties(BasicProperties properties) {
-		listener.setProps(properties);
-		for(BasicListener l : lCumul)
-			l.setProps(properties);
-		resultLstn.setProps(properties);
 	}
 	
 	public void sendStream() {

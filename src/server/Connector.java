@@ -7,8 +7,8 @@ import com.rabbitmq.client.*;
 
 public class Connector {
 	private final static String QUEUE_NAME_REQUEST = "worker_in";
-	private final static String QUEUE_NAME_REPLY = "worker_out";
 	
+	private String replyQueueName = "";
 	private Connection connection;
 	protected Channel channelIn;
 	protected Channel channelOut;
@@ -22,9 +22,7 @@ public class Connector {
 		try {
 			connection = factory.newConnection();
 			channelIn = connection.createChannel();
-			channelOut = connection.createChannel();
 			channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, null);
-			channelOut.queueDeclare(QUEUE_NAME_REPLY, false, false, false, null);
 		} catch (IOException e) {
 			Main.logger.log(2, "Host unknown. Aborting...");
 			System.exit(1);
@@ -32,6 +30,17 @@ public class Connector {
 	    	Main.logger.log(2, "Host timed out. Aborting...");
 			System.exit(1);
 		}
+	}
+	
+	public void initReplyQueue(String replyQueueName) {
+		this.replyQueueName = replyQueueName;
+		try {
+			channelOut = connection.createChannel();
+			channelOut.queueDeclare(replyQueueName, false, false, false, null);
+		} catch (IOException e) {
+			Main.logger.log(2, "Host unknown. Aborting...");
+			System.exit(1);
+	    }
 	}
 	
 	public void closeConnections() {
@@ -72,7 +81,7 @@ public class Connector {
 	}
 	
 	public String cOutName() {
-		return QUEUE_NAME_REPLY;
+		return replyQueueName;
 	}
 
 }

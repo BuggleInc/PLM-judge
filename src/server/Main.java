@@ -10,7 +10,6 @@ import plm.core.model.Game;
 import plm.core.model.LogHandler;
 import server.parser.*;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.Channel;
 
@@ -55,28 +54,22 @@ public class Main {
 		}
 		logger.log(0, "Waiting for request [" + host + ":" + port + "]");
 		QueueingConsumer.Delivery delivery = connector.getDelivery();
-		BasicProperties props = delivery.getProperties();
-	    BasicProperties replyProps = new BasicProperties
-                .Builder()
-                .correlationId(props.getCorrelationId())
-                .expiration("5000")
-                .build();
 		String message = "";
 		try {
 			message = new String(delivery.getBody(),"UTF-8");
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}
-		
-		logger.log(0, "Received request from '" + props.getCorrelationId() + "'.");
-		sendAck(replyProps);
-		logger.log(0, "Send ack");
 		RequestMsg request = RequestMsg.readMessage(message);
+		connector.initReplyQueue(request.getReplyQueue());
+		logger.log(0, "Received request from '" + request.getReplyQueue() + "'.");
+		sendAck();
+		logger.log(0, "Send ack");
+		
 		logger.log(0, "Setting game properties.");
 		// Set game state
 		gest.setGameState(Locale.forLanguageTag(request.getLocale()), request.getLanguage(), request.getLessonID(), request.getExerciseID());
 		// Setting return data
-		gest.setProperties(replyProps);
 		// Put code in compiler.
 		logger.log(0, "Starting compilation.");
 		gest.setCode(request.getCode());
@@ -89,14 +82,14 @@ public class Main {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static void sendAck(BasicProperties properties) {
+	public static void sendAck() {
 		Channel channel = connector.cOut();
 		JSONObject msgJson = new JSONObject();
 		msgJson.put("type", "ack");
 		String message = msgJson.toJSONString();
 		String sendTo = connector.cOutName();
 		try {
-			channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
+			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

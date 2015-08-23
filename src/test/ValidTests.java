@@ -4,9 +4,6 @@ import java.util.Locale;
 import server.GameGest;
 import server.Main;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
-
-
 public class ValidTests {
 	private static GameGest gest = null;
 	private static ConnectorTest connector = new ConnectorTest();
@@ -14,11 +11,6 @@ public class ValidTests {
 	public void init() {
 		connector.init("kappa", 1000);
 		gest = new GameGest(connector, Main.logger);
-		BasicProperties replyProps = new BasicProperties
-                .Builder()
-                .correlationId("TestCorrID")
-                .build();
-		gest.setProperties(replyProps);
 	}
 	
 	public int initWithParams(String lessID, String exID, String code) {

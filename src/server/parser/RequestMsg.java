@@ -17,6 +17,7 @@ public class RequestMsg {
 	private String loc;
 	private String lang;
 	private String code;
+	private String replyQueue;
 	
 	private RequestMsg() {
 		// NO OP
@@ -37,6 +38,7 @@ public class RequestMsg {
 			replyData.loc = (String) replyJSON.get("localization");
 			replyData.lang = (String) replyJSON.get("language");
 			replyData.code = (String) replyJSON.get("code");
+			replyData.replyQueue = (String) replyJSON.get("replyQueue");
 		} catch (ParseException e) {
 			Main.logger.log(2, "Parse exception : message in queue didn't fit the expected format.");
 			e.printStackTrace();
@@ -82,5 +84,9 @@ public class RequestMsg {
 	 */
 	public String getCode() {
 		return code;
+	}
+	
+	public String getReplyQueue() {
+		return replyQueue;
 	}
 }

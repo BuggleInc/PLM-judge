@@ -6,7 +6,6 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 
 import plm.core.model.Game;
@@ -30,7 +29,6 @@ public class BasicListener implements IWorldView {
 	private World currWorld = null;
 	Channel channel;
 	String sendTo;
-	BasicProperties properties;
 	long lastTime = System.currentTimeMillis();
 	long delay;
 	JSONArray accu = new JSONArray();
@@ -51,15 +49,7 @@ public class BasicListener implements IWorldView {
 		this.channel = c;
 		this.sendTo = sTo;
 	}
-	
-	/**
-	 * Set the reply properties value.
-	 * @param properties The properties sent with each message
-	 */
-	public void setProps(BasicProperties properties) {
-		this.properties = properties;
-	}
-	
+
 	/**
 	 * Set or replaces the game world to listen to.
 	 * @param world
@@ -71,9 +61,7 @@ public class BasicListener implements IWorldView {
 	
 	@Override
 	public BasicListener clone() {
-		BasicListener copy = new BasicListener(channel, sendTo, delay);
-		copy.setProps(properties);
-		return copy;
+		return new BasicListener(channel, sendTo, delay);
 	}
 	
 	@Override
@@ -126,11 +114,11 @@ public class BasicListener implements IWorldView {
 			msgJson.put("content", accu);
 			String message = msgJson.toJSONString();
 			try {
-				channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
+				channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
-			Main.logger.log(0, "Sent stream message (" + properties.getCorrelationId() + ")");
+			Main.logger.log(0, "Sent stream message (" + sendTo + ")");
 			accu.clear();
 		}
 	}
