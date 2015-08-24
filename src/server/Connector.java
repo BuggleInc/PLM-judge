@@ -36,7 +36,7 @@ public class Connector {
 		this.replyQueueName = replyQueueName;
 		try {
 			channelOut = connection.createChannel();
-			channelOut.queueDeclare(replyQueueName, false, false, false, null);
+			channelOut.queueDeclare(replyQueueName, false, false, true, null);
 		} catch (IOException e) {
 			Main.logger.log(2, "Host unknown. Aborting...");
 			System.exit(1);

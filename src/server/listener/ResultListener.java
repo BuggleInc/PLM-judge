@@ -8,7 +8,6 @@ import server.Connector;
 import server.GameGest;
 import server.Main;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 
 import plm.core.GameStateListener;
@@ -26,9 +25,7 @@ import server.parser.ReplyMsg;
 public class ResultListener implements GameStateListener {
 
 	private Game currGame;
-	Channel channel;
-	String sendTo;
-	BasicProperties properties;
+	Connector connector;
 	GameGest parent;
 	
 	/**
@@ -37,21 +34,10 @@ public class ResultListener implements GameStateListener {
 	 * @param lstn The basic listener to activate for stream end.
 	 */
 	public ResultListener(Connector connector, GameGest parent) {
-		this.channel = connector.cOut();
-		this.sendTo = connector.cOutName();
+		this.connector = connector;
 		this.parent = parent;
 	}
-	
-	private ResultListener(Channel c, String sTo, GameGest parent) {
-		this.channel = c;
-		this.sendTo = sTo;
-		this.parent = parent;
-	}
-	
-	public void setProps(BasicProperties p) {
-		properties = p;
-	}
-	
+
 	public void setGame(Game g) {
 		if(currGame != null)
 			currGame.removeGameStateListener(this);
@@ -61,8 +47,7 @@ public class ResultListener implements GameStateListener {
 	
 	@Override
 	public ResultListener clone() {
-		ResultListener copy = new ResultListener(channel, sendTo, parent);
-		copy.setProps(properties);
+		ResultListener copy = new ResultListener(connector, parent);
 		copy.setGame(currGame);
 		return this;
 	}
@@ -82,13 +67,15 @@ public class ResultListener implements GameStateListener {
 	}
 	
 	public void send(ExecutionProgress exPro, I18n i18n) {
+		Channel channel = connector.cOut();
+		String sendTo = connector.cOutName();
 		ReplyMsg replyMsg = new ReplyMsg(exPro, i18n);
 		String message = replyMsg.toJSON();
 		try {
-			channel.basicPublish("", sendTo, properties, message.getBytes("UTF-8"));
+			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
-		Main.logger.log(0, "Sent end comm. message (" + properties.getCorrelationId() + ")");
+		Main.logger.log(0, "Sent end comm. message (" + sendTo + ")");
 	}
 }

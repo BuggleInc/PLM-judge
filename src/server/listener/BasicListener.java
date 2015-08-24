@@ -27,8 +27,7 @@ import server.parser.StreamMsg;
 public class BasicListener implements IWorldView {
 
 	private World currWorld = null;
-	Channel channel;
-	String sendTo;
+	Connector connector;
 	long lastTime = System.currentTimeMillis();
 	long delay;
 	JSONArray accu = new JSONArray();
@@ -40,14 +39,7 @@ public class BasicListener implements IWorldView {
 	 */
 	public BasicListener(Connector connector, long delay) {
 		this.delay = delay;
-		this.channel = connector.cOut();
-		this.sendTo = connector.cOutName();
-	}
-	
-	private BasicListener(Channel c, String sTo, long d) {
-		this.delay = d;
-		this.channel = c;
-		this.sendTo = sTo;
+		this.connector = connector;
 	}
 
 	/**
@@ -61,7 +53,7 @@ public class BasicListener implements IWorldView {
 	
 	@Override
 	public BasicListener clone() {
-		return new BasicListener(channel, sendTo, delay);
+		return new BasicListener(connector, delay);
 	}
 	
 	@Override
@@ -108,6 +100,8 @@ public class BasicListener implements IWorldView {
 	@SuppressWarnings("unchecked")
 	public void send() {
 		if(!accu.isEmpty()) {
+			Channel channel = connector.cOut();
+			String sendTo = connector.cOutName();
 			lastTime = System.currentTimeMillis();
 			JSONObject msgJson = new JSONObject();
 			msgJson.put("type", "stream");

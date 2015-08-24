@@ -61,7 +61,8 @@ public class Main {
 			e1.printStackTrace();
 		}
 		RequestMsg request = RequestMsg.readMessage(message);
-		connector.initReplyQueue(request.getReplyQueue());
+		String replyQueue = request.getReplyQueue();
+		connector.initReplyQueue(replyQueue);
 		logger.log(0, "Received request from '" + request.getReplyQueue() + "'.");
 		sendAck();
 		logger.log(0, "Send ack");
