@@ -24,40 +24,23 @@ public class ReplyMsg {
 		int type = lastResult.outcome == ExecutionProgress.outcomeKind.PASS ? 1 : 0;
 		String msg = lastResult.getMsg(i18n);
 		JSONObject res = new JSONObject();
-		JSONObject gitReply = new JSONObject();
-		// Create the GIT replies object.
-		gitReply.put("lang", lastResult.language.toString());
+		res.put("type", "result");
+		res.put("msgType", type);
 		if (lastResult.outcome != null) {
 			switch (lastResult.outcome) {
-				case COMPILE:  gitReply.put("outcome", "compile");  break;
-				case FAIL:     gitReply.put("outcome", "fail");     break;
-				case PASS:     gitReply.put("outcome", "pass");     break;
-				default:       gitReply.put("outcome", "UNKNOWN");  break;
+				case COMPILE:  res.put("outcome", "compile");  break;
+				case FAIL:     res.put("outcome", "fail");     break;
+				case PASS:     res.put("outcome", "pass");     break;
+				default:       res.put("outcome", "UNKNOWN");  break;
 			}
 		}
-		
-		if (lastResult.totalTests > 0) {
-			gitReply.put("passedtests", lastResult.passedTests + "");
-			gitReply.put("totaltests", lastResult.totalTests + "");
-		}
-		
-		if (lastResult.feedbackDifficulty != null)
-			gitReply.put("exoDifficulty", lastResult.feedbackDifficulty);
-		if (lastResult.feedbackInterest != null)
-			gitReply.put("exoInterest", lastResult.feedbackInterest);
-		if (lastResult.feedback != null)
-			gitReply.put("exoComment", lastResult.feedback);
-		if (lastResult.compilationError != null)
-			gitReply.put("compilError", lastResult.compilationError);
-		if (lastResult.executionError != null)
-			gitReply.put("execError", lastResult.executionError);
-		// create the log data.
-		res.put("msgType", type);
 		res.put("msg", msg);
-		res.put("git_logs", gitReply);
-		res.put("type", "result");
-		res.put("commonErrorText", lastResult.commonErrorText);
-		res.put("commonErrorID", lastResult.commonErrorID);
+		res.put("totaltests", lastResult.totalTests);
+		res.put("passedtests", lastResult.passedTests);
+		if (lastResult.compilationError != null)
+			res.put("compilError", lastResult.compilationError);
+		if (lastResult.executionError != null)
+			res.put("execError", lastResult.executionError);
 		result = res.toJSONString();
 	}
 	
