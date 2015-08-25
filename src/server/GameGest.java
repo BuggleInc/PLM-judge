@@ -56,6 +56,7 @@ public class GameGest {
 			BasicListener l = listener.clone();
 			l.setWorld(w);
 			lCumul.add(l);
+			w.setDelay(0);
 		}
 		resultLstn.setGame(game);
 	}
