@@ -13,6 +13,8 @@ public class Connector {
 	protected Channel channelIn;
 	protected Channel channelOut;
 	
+    private long defaultTimeout = 10000;
+    
 	private QueueingConsumer consumer;
 	
 	public void init(String host, int port) {
@@ -22,7 +24,9 @@ public class Connector {
 		try {
 			connection = factory.newConnection();
 			channelIn = connection.createChannel();
-			channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, null);
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("x-message-ttl", defaultTimeout);
+			channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, args);
 		} catch (IOException e) {
 			Main.logger.log(2, "Host unknown. Aborting...");
 			System.exit(1);
@@ -36,7 +40,9 @@ public class Connector {
 		this.replyQueueName = replyQueueName;
 		try {
 			channelOut = connection.createChannel();
-			channelOut.queueDeclare(replyQueueName, false, false, true, null);
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("x-message-ttl", 5000);
+			channelOut.queueDeclare(replyQueueName, false, false, true, args);
 		} catch (IOException e) {
 			Main.logger.log(2, "Host unknown. Aborting...");
 			System.exit(1);
