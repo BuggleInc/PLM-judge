@@ -33,6 +33,8 @@ public class ReplyMsg {
 				case PASS:     res.put("outcome", "pass");     break;
 				default:       res.put("outcome", "UNKNOWN");  break;
 			}
+			res.put("commonErrorID", lastResult.commonErrorID);
+			res.put("commonErrorText", lastResult.commonErrorText);
 		}
 		res.put("msg", msg);
 		res.put("totaltests", lastResult.totalTests);
