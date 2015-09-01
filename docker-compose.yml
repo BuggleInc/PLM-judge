@@ -1,0 +1,6 @@
+judge:
+  image: plm-judge
+  restart: always
+  environment: 
+    MESSAGEQ_PORT_5672_TCP_ADDR: plm.telecomnancy.univ-lorraine.fr
+    MESSAGEQ_PORT_5672_TCP_PORT: 5672
