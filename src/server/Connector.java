@@ -1,9 +1,16 @@
 package server;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ConsumerCancelledException;
+import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.ShutdownSignalException;
 
 public class Connector {
 	private final static String QUEUE_NAME_REQUEST = "worker_in";
@@ -13,6 +20,8 @@ public class Connector {
 	protected Channel channelIn;
 	protected Channel channelOut;
 	
+    private long defaultTimeout = 10000;
+    
 	private QueueingConsumer consumer;
 	
 	public void init(String host, int port) {
@@ -22,7 +31,9 @@ public class Connector {
 		try {
 			connection = factory.newConnection();
 			channelIn = connection.createChannel();
-			channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, null);
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("x-message-ttl", defaultTimeout);
+			channelIn.queueDeclare(QUEUE_NAME_REQUEST, false, false, false, args);
 		} catch (IOException e) {
 			Main.logger.log(2, "Host unknown. Aborting...");
 			System.exit(1);
@@ -36,7 +47,9 @@ public class Connector {
 		this.replyQueueName = replyQueueName;
 		try {
 			channelOut = connection.createChannel();
-			channelOut.queueDeclare(replyQueueName, false, false, true, null);
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("x-message-ttl", 5000);
+			channelOut.queueDeclare(replyQueueName, false, false, true, args);
 		} catch (IOException e) {
 			Main.logger.log(2, "Host unknown. Aborting...");
 			System.exit(1);
