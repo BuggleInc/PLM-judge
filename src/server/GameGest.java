@@ -26,9 +26,6 @@ public class GameGest {
 		game = new Game("test", logger, Locale.FRENCH,"Java" , false);
 		listener = new BasicListener(connector, 1000);
 		resultLstn = new ResultListener(connector, this);
-		listenerOut = new ListenerOutStream(System.out, listener);
-		PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
-        System.setOut(outStream);
 	}
 	
 	public void setGameState(Locale locale, String language, String lessonID, String exerciseID) {
@@ -54,6 +51,9 @@ public class GameGest {
 		Exercise exo = (Exercise) lect;
 		for(World w : exo.getWorlds(WorldKind.CURRENT)) {
 			BasicListener l = listener.clone();
+			if(listenerOut == null) {
+				addListenerOutStream(l);
+			}
 			l.setWorld(w);
 			lCumul.add(l);
 			w.setDelay(0);
@@ -84,6 +84,12 @@ public class GameGest {
 	
 	public void free() {
 		endExercise.release();
+	}
+	
+	public void addListenerOutStream(BasicListener l) {
+		listenerOut = new ListenerOutStream(System.out, l);
+		PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
+        System.setOut(outStream);
 	}
 	
 	public void stop() {
