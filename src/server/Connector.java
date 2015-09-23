@@ -20,8 +20,8 @@ public class Connector {
 	protected Channel channelIn;
 	protected Channel channelOut;
 	
-    private long defaultTimeout = 10000;
-    
+    private Long defaultTimeout = new Long(10000);
+
 	private QueueingConsumer consumer;
 	
 	public void init(String host, int port) {
