@@ -1,17 +1,47 @@
 package server.parser;
 
+import java.awt.Color;
+
+import lessons.recursion.hanoi.operations.HanoiMove;
+import lessons.recursion.hanoi.operations.HanoiOperation;
+import lessons.sort.baseball.operations.BaseballOperation;
+import lessons.sort.baseball.operations.MoveOperation;
+import lessons.sort.dutchflag.operations.DutchFlagOperation;
+import lessons.sort.dutchflag.operations.DutchFlagSwap;
+import lessons.sort.pancake.universe.operations.FlipOperation;
+import lessons.sort.pancake.universe.operations.PancakeOperation;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import plm.universe.Operation;
-import lessons.sort.baseball.operations.*;
-import plm.universe.bat.*;
-import plm.universe.bugglequest.*;
-import lessons.sort.dutchflag.operations.*;
 import plm.universe.GridWorldCellOperation;
-import lessons.recursion.hanoi.operations.*;
-import lessons.sort.pancake.universe.operations.*;
-import plm.universe.sort.operations.*;
+import plm.universe.Operation;
+import plm.universe.bat.BatOperation;
+import plm.universe.bat.BatTest;
+import plm.universe.bugglequest.BuggleOperation;
+import plm.universe.bugglequest.BuggleWorldCellOperation;
+import plm.universe.bugglequest.ChangeBuggleBrushDown;
+import plm.universe.bugglequest.ChangeBuggleCarryBaggle;
+import plm.universe.bugglequest.ChangeBuggleDirection;
+import plm.universe.bugglequest.ChangeCellColor;
+import plm.universe.bugglequest.ChangeCellContent;
+import plm.universe.bugglequest.ChangeCellHasBaggle;
+import plm.universe.bugglequest.ChangeCellHasContent;
+import plm.universe.bugglequest.MoveBuggleOperation;
+import plm.universe.sort.operations.CopyOperation;
+import plm.universe.sort.operations.CountOperation;
+import plm.universe.sort.operations.GetValueOperation;
+import plm.universe.sort.operations.SetValOperation;
+import plm.universe.sort.operations.SortOperation;
+import plm.universe.sort.operations.SwapOperation;
+import plm.universe.turtles.operations.AddCircle;
+import plm.universe.turtles.operations.AddLine;
+import plm.universe.turtles.operations.AddSizeHint;
+import plm.universe.turtles.operations.ChangeTurtleVisible;
+import plm.universe.turtles.operations.ClearCanvas;
+import plm.universe.turtles.operations.MoveTurtle;
+import plm.universe.turtles.operations.RotateTurtle;
+import plm.universe.turtles.operations.TurtleOperation;
 
 /**
  * The {@link Operation} to {@link JSONObject} conversion tool.
@@ -29,6 +59,16 @@ public abstract class OperationParser {
 	public static JSONObject toJSON(Operation operation) {
 		return Router.toJSON(operation);
 	}
+	
+	public static JSONArray colorWrapper(Color color) {
+		JSONArray json = new JSONArray();
+		json.add(color.getRed());
+		json.add(color.getGreen());
+		json.add(color.getBlue());
+		json.add(color.getAlpha());
+		return json;
+	}
+	
 // Operation routing
 	/**
 	 * The {@link Operation} parser.
@@ -54,6 +94,8 @@ public abstract class OperationParser {
 				r = Pancake.toJSON((PancakeOperation) o);
 			else if(o instanceof SortOperation)
 				r = Sort.toJSON((SortOperation) o);
+			else if(o instanceof TurtleOperation)
+				r = Turtle.toJSON((TurtleOperation) o);
 			else r = new JSONObject();
 			r.put("type", o.getName());
 			r.put("msg", o.getMsg());
@@ -121,18 +163,8 @@ public abstract class OperationParser {
 			}
 			private static JSONObject toJSON(ChangeCellColor o) {
 				JSONObject res = new JSONObject();
-				JSONArray oldCol = new JSONArray();
-					oldCol.add(o.getOldColor().getRed());
-					oldCol.add(o.getOldColor().getGreen());
-					oldCol.add(o.getOldColor().getBlue());
-					oldCol.add(o.getOldColor().getAlpha());
-				JSONArray newCol = new JSONArray();
-					newCol.add(o.getNewColor().getRed());
-					newCol.add(o.getNewColor().getGreen());
-					newCol.add(o.getNewColor().getBlue());
-					newCol.add(o.getNewColor().getAlpha());
-				res.put("oldColor", oldCol);
-				res.put("newColor", newCol);
+				res.put("oldColor", colorWrapper(o.getOldColor()));
+				res.put("newColor", colorWrapper(o.getNewColor()));
 				res.put("operation", "ChangeCellColor");
 				return res;
 			}
@@ -333,6 +365,86 @@ public abstract class OperationParser {
 			private static JSONObject toJSON(GetValueOperation o) {
 				JSONObject res = new JSONObject();
 				res.put("position", o.getPosition());
+				return res;
+			}
+		}
+		
+		private static class Turtle {
+			private static JSONObject toJSON(TurtleOperation o) {
+				JSONObject res;
+				if(o instanceof AddCircle)
+					res = toJSON((AddCircle) o);
+				else if(o instanceof AddLine)
+					res = toJSON((AddLine) o);
+				else if(o instanceof AddSizeHint)
+					res = toJSON((AddSizeHint) o);
+				else if(o instanceof ChangeTurtleVisible)
+					res = toJSON((ChangeTurtleVisible) o);
+				else if(o instanceof ClearCanvas)
+					res = toJSON((ClearCanvas) o);
+				else if(o instanceof MoveTurtle)
+					res = toJSON((MoveTurtle) o);
+				else if(o instanceof RotateTurtle)
+					res = toJSON((RotateTurtle) o);
+				else res = new JSONObject();
+				res.put("turtleID", o.getTurtle().getName());
+				return res;
+			}
+			
+			private static JSONObject toJSON(AddCircle o) {
+				JSONObject res = new JSONObject();
+				res.put("x", o.getX());
+				res.put("y",  o.getY());
+				res.put("radius", o.getRadius());
+				res.put("color", colorWrapper(o.getColor()));
+				return res;
+			}
+			
+			private static JSONObject toJSON(AddLine o) {
+				JSONObject res = new JSONObject();
+				res.put("x1", o.getX1());
+				res.put("y1",  o.getY1());
+				res.put("x2", o.getX2());
+				res.put("y2",  o.getY2());
+				res.put("color", colorWrapper(o.getColor()));
+				return res;
+			}
+			
+			private static JSONObject toJSON(AddSizeHint o) {
+				JSONObject res = new JSONObject();
+				res.put("x1", o.getX1());
+				res.put("y1",  o.getY1());
+				res.put("x2", o.getX2());
+				res.put("y2",  o.getY2());
+				res.put("text", o.getText());
+				return res;
+			}
+			
+			private static JSONObject toJSON(ChangeTurtleVisible o) {
+				JSONObject res = new JSONObject();
+				res.put("oldVisible", o.getOldVisible());
+				res.put("newVisible", o.getNewVisible());
+				return res;
+			}
+			
+			private static JSONObject toJSON(ClearCanvas o) {
+				JSONObject res = new JSONObject();
+				return res;
+			}
+			
+			private static JSONObject toJSON(MoveTurtle o) {
+				JSONObject res = new JSONObject();
+				res.put("oldX", o.getOldX());
+				res.put("oldY",  o.getOldY());
+				res.put("newX", o.getNewX());
+				res.put("newY", o.getNewY());
+				return res;
+			}
+			
+			private static JSONObject toJSON(RotateTurtle o) {
+				JSONObject res = new JSONObject();
+				res.put("oldHeading", o.getOldHeading());
+				res.put("newHeading", o.getNewHeading());
 				return res;
 			}
 		}
