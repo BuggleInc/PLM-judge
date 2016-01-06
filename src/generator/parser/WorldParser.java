@@ -2,15 +2,14 @@ package generator.parser;
 
 import java.awt.Color;
 import java.util.List;
-import java.util.Vector;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import lessons.recursion.hanoi.universe.HanoiWorld;
-import lessons.sort.baseball.universe.BaseballWorld;
-import lessons.sort.dutchflag.universe.DutchFlagWorld;
-import lessons.sort.pancake.universe.PancakeWorld;
+import plm.universe.hanoi.HanoiWorld;
+import plm.universe.baseball.BaseballWorld;
+import plm.universe.dutchflag.DutchFlagWorld;
+import plm.universe.pancake.PancakeWorld;
 import plm.universe.Entity;
 import plm.universe.GridWorld;
 import plm.universe.GridWorldCell;
@@ -76,7 +75,7 @@ public class WorldParser {
 			JSONArray arr = new JSONArray();
 		    for(BatTest t : w.getTests()){
 		    	JSONObject rInt = new JSONObject();
-		    	rInt.put("test", t.formatAsString());
+		    	//rInt.put("test", t.formatAsString());
 		    	rInt.put("answered", t.isAnswered());
 		    	rInt.put("correct", t.isCorrect());
 		    	rInt.put("visible", t.isVisible());
@@ -98,6 +97,7 @@ public class WorldParser {
 			r.put("type", "HanoiWorld");
 			r.put("moveCount", w.getMoveCount());
 			JSONArray arr = new JSONArray();
+			/*
 			for(Vector<Integer> sLine : w.getSlot()){
 				JSONArray arrInt = new JSONArray();
 				for(Integer slot : sLine) {
@@ -105,6 +105,7 @@ public class WorldParser {
 				}
 				arr.add(arrInt);
 			}
+			*/
 			r.put("slotVal", arr);
 			return r;
 		}
@@ -206,7 +207,7 @@ public class WorldParser {
 		public static JSONObject toJSON(PancakeWorld w) {
 			JSONObject r = new JSONObject();
 			r.put("type",  "PancakeWorld");
-			r.put("pancakeStack", toJSON(w.getStack()));
+			//r.put("pancakeStack", toJSON(w.getStack()));
 			r.put("moveCount", w.getMoveCount());
 			r.put("numberFlip", 0);
 			r.put("oldNumber", 0);
@@ -214,9 +215,9 @@ public class WorldParser {
 			return r;
 		}
 
-		private static JSONArray toJSON(lessons.sort.pancake.universe.Pancake[] stack) {
+		private static JSONArray toJSON(plm.universe.pancake.Pancake[] stack) {
 			JSONArray arr = new JSONArray();
-			for(lessons.sort.pancake.universe.Pancake p : stack) {
+			for(plm.universe.pancake.Pancake p : stack) {
 				JSONObject o = new JSONObject();
 				o.put("radius", p.getRadius());
 				o.put("upsideDown", p.isUpsideDown());

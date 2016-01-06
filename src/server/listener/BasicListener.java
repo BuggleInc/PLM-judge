@@ -59,6 +59,7 @@ public class BasicListener implements IWorldView {
 	@Override
 	public void worldHasMoved() {
 		List<Entity> l = currWorld.getEntities();
+		/*
 		for(Entity element : l) {
 			if(element.isReadyToSend()) {
 				StreamMsg streamMsg = new StreamMsg(currWorld, element.getOperations());
@@ -70,6 +71,7 @@ public class BasicListener implements IWorldView {
 		        }
 			}
 		}
+		*/
 	}
 
 	@Override

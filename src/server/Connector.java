@@ -24,7 +24,7 @@ public class Connector {
 
 	private QueueingConsumer consumer;
 	
-	public void init(String host, int port) {
+	public Connector(String host, int port) {
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
 		factory.setPort(port);

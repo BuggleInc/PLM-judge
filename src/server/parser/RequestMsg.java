@@ -12,8 +12,7 @@ import server.Main;
  */
 public class RequestMsg {
 
-	private String lessonID;
-	private String exerciseID;
+	private String jsonExercise;
 	private String loc;
 	private String lang;
 	private String code;
@@ -33,8 +32,7 @@ public class RequestMsg {
 		JSONParser p = new JSONParser();
 		try {
 			JSONObject replyJSON = (JSONObject) p.parse(s);
-			replyData.lessonID = (String) replyJSON.get("lesson");
-			replyData.exerciseID = (String) replyJSON.get("exercise");
+			replyData.jsonExercise = (String) replyJSON.get("exercise");
 			replyData.loc = (String) replyJSON.get("localization");
 			replyData.lang = (String) replyJSON.get("language");
 			replyData.code = (String) replyJSON.get("code");
@@ -46,20 +44,8 @@ public class RequestMsg {
 		return replyData;
 	}
 
-	/**
-	 * Retrieves the messages' Lesson ID
-	 * @return the PLM-compliant lessonID.
-	 */
-	public String getLessonID() {
-		return lessonID;
-	}
-
-	/**
-	 * Retrieves the messages' Exercise ID.
-	 * @return the PLM-compliant exerciseID.
-	 */
-	public String getExerciseID() {
-		return exerciseID;
+	public String getJSONExercise() {
+		return jsonExercise;
 	}
 
 	/**

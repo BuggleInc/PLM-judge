@@ -33,7 +33,6 @@ public class ServerLogHandler extends LogHandler {
 		}
 	}
 
-	@Override
 	public void send(int type, String message) {
 		log(type, message);
 	}

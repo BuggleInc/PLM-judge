@@ -2,32 +2,23 @@ package server.parser;
 
 import java.awt.Color;
 
-import lessons.recursion.hanoi.operations.HanoiMove;
-import lessons.recursion.hanoi.operations.HanoiOperation;
-import lessons.sort.baseball.operations.BaseballOperation;
-import lessons.sort.baseball.operations.MoveOperation;
-import lessons.sort.dutchflag.operations.DutchFlagOperation;
-import lessons.sort.dutchflag.operations.DutchFlagSwap;
-import lessons.sort.pancake.universe.operations.FlipOperation;
-import lessons.sort.pancake.universe.operations.PancakeOperation;
+import plm.universe.hanoi.operations.HanoiMove;
+import plm.universe.hanoi.operations.HanoiOperation;
+import plm.universe.baseball.operations.BaseballOperation;
+import plm.universe.baseball.operations.MoveOperation;
+import plm.universe.dutchflag.operations.DutchFlagOperation;
+import plm.universe.dutchflag.operations.DutchFlagSwap;
+import plm.universe.pancake.operations.FlipOperation;
+import plm.universe.pancake.operations.PancakeOperation;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import plm.universe.GridWorldCellOperation;
 import plm.universe.Operation;
-import plm.universe.bat.BatOperation;
+import plm.universe.bat.operations.*;
 import plm.universe.bat.BatTest;
-import plm.universe.bugglequest.BuggleOperation;
-import plm.universe.bugglequest.BuggleWorldCellOperation;
-import plm.universe.bugglequest.ChangeBuggleBrushDown;
-import plm.universe.bugglequest.ChangeBuggleCarryBaggle;
-import plm.universe.bugglequest.ChangeBuggleDirection;
-import plm.universe.bugglequest.ChangeCellColor;
-import plm.universe.bugglequest.ChangeCellContent;
-import plm.universe.bugglequest.ChangeCellHasBaggle;
-import plm.universe.bugglequest.ChangeCellHasContent;
-import plm.universe.bugglequest.MoveBuggleOperation;
+import plm.universe.bugglequest.operations.*;
 import plm.universe.sort.operations.CopyOperation;
 import plm.universe.sort.operations.CountOperation;
 import plm.universe.sort.operations.GetValueOperation;
@@ -98,7 +89,7 @@ public abstract class OperationParser {
 				r = Turtle.toJSON((TurtleOperation) o);
 			else r = new JSONObject();
 			r.put("type", o.getName());
-			r.put("msg", o.getMsg());
+			//r.put("msg", o.getMsg());
 			return r;
 		}
 // Baseball operations
@@ -127,6 +118,7 @@ public abstract class OperationParser {
 			private static JSONObject toJSON(BatOperation o) {
 				JSONObject res = new JSONObject();
 				JSONArray resArray = new JSONArray();
+				/*
 				for(Object t : o.getBatWorld().getTests().toArray()) {
 					JSONObject resElem = new JSONObject();
 					resElem.put("test", ((BatTest) t).formatAsString());
@@ -135,6 +127,7 @@ public abstract class OperationParser {
 					resElem.put("visible", ((BatTest) t).isVisible());
 					resArray.add(resElem);
 				}
+				*/
 				res.put("type", "BatWorld");
 				res.put("batTests", resArray);
 				return res;

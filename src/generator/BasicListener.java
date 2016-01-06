@@ -80,6 +80,7 @@ public class BasicListener implements IWorldView {
 	
 	@Override
 	public void worldHasMoved() {
+		/*
 		List<Entity> l = currWorld.getEntities();
 		for(Entity element : l) {
 			if(element.isReadyToSend()) {
@@ -90,6 +91,7 @@ public class BasicListener implements IWorldView {
 				send(message);
 			}
 		}
+		*/
 	}
 
 	@Override
