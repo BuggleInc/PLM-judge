@@ -3,6 +3,8 @@ package server;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.json.simple.JSONObject;
@@ -31,6 +33,7 @@ public class Judge {
 	private I18n i18n;
 
 	private ExerciseRunner exerciseRunner;
+	private List<BasicListener> listeners = new ArrayList<BasicListener>();
 	
 	public Judge(Connector connector) {
 		this.connector = connector;
@@ -64,6 +67,7 @@ public class Judge {
 		String code = request.getCode();
 		
 		ExecutionProgress result = exerciseRunner.run(exo, progLang, code);
+		flushListeners();
 		sendResult(result);
 		System.err.println("Result: " + result.toJSON().toString());
 	}
@@ -86,6 +90,7 @@ public class Judge {
 		ListenerOutStream listenerOut = null;
 		for(World w : exo.getWorlds(WorldKind.CURRENT)) {
 			BasicListener l = listener.clone();
+			listeners.add(l);
 			if(listenerOut == null) {
 				listenerOut = new ListenerOutStream(System.out, l);
 				PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
@@ -96,11 +101,17 @@ public class Judge {
 		}
 	}
 
+	public void flushListeners() {
+		for(BasicListener l : listeners) {
+			l.send();
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	public void sendAck() {
 		Channel channel = connector.cOut();
 		JSONObject msgJson = new JSONObject();
-		msgJson.put("type", "ack");
+		msgJson.put("cmd", "ack");
 		String message = msgJson.toJSONString();
 		String sendTo = connector.cOutName();
 		try {
@@ -116,7 +127,7 @@ public class Judge {
 	public void sendResult(ExecutionProgress result) {
 		Channel channel = connector.cOut();
 		JSONObject msgJson = new JSONObject();
-		msgJson.put("type", "executionResult");
+		msgJson.put("cmd", "executionResult");
 		msgJson.put("result", result.toJSON());
 		String message = msgJson.toJSONString();
 		String sendTo = connector.cOutName();

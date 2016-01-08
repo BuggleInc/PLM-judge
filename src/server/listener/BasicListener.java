@@ -6,15 +6,15 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.rabbitmq.client.Channel;
-
 import plm.core.model.Game;
-import plm.universe.Entity;
 import plm.universe.IWorldView;
+import plm.universe.Operation;
 import plm.universe.World;
 import server.Connector;
 import server.Main;
 import server.parser.StreamMsg;
+
+import com.rabbitmq.client.Channel;
 
 /**
  * The {@link IWorldView} implementation. Linked to the current {@link Game} instance, and is called every time the world moves. 
@@ -32,6 +32,8 @@ public class BasicListener implements IWorldView {
 	long delay;
 	JSONArray accu = new JSONArray();
 	
+	int cnt = 0;
+
 	/**
 	 * The {@link BasicListener} constructor.
 	 * @param connector the used connector
@@ -57,21 +59,34 @@ public class BasicListener implements IWorldView {
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
 	public void worldHasMoved() {
-		List<Entity> l = currWorld.getEntities();
-		/*
-		for(Entity element : l) {
-			if(element.isReadyToSend()) {
-				StreamMsg streamMsg = new StreamMsg(currWorld, element.getOperations());
-				element.getOperations().clear();
-				element.setReadyToSend(false);
-				addOperations(streamMsg.result());
-				if(lastTime+delay <= System.currentTimeMillis()) {
-					send();
-		        }
+		Long currentTime = System.currentTimeMillis();
+		int length = currWorld.getSteps().size();
+		for(int i=cnt; i<length; i++) {
+			List<Operation> operations = currWorld.getSteps().get(i);
+			
+			JSONObject mapArgs = new JSONObject();
+			
+			JSONArray jsonOperations = new JSONArray();
+			for(Operation operation: operations) {
+				jsonOperations.add(operation.toJSON());
+			}
+			
+			mapArgs.put("operations", jsonOperations);
+			mapArgs.put("worldID", currWorld.getName());
+			
+			accu.add(mapArgs);
+			if(lastTime + delay <= currentTime) {
+				System.err.println("On envoie");
+				lastTime = currentTime;
+				send();
+			}
+			else {
+				System.err.println("On bufferize");
 			}
 		}
-		*/
+		cnt = length;
 	}
 
 	@Override
@@ -86,7 +101,7 @@ public class BasicListener implements IWorldView {
 	@SuppressWarnings("unchecked")
 	public void streamOut(String msg) {
 		JSONObject res = new JSONObject();
-		res.put("type", "outputStream");
+		res.put("cmd", "outputStream");
 		res.put("msg", msg);
 		addOperations(res);
 	}
@@ -105,10 +120,17 @@ public class BasicListener implements IWorldView {
 			Channel channel = connector.cOut();
 			String sendTo = connector.cOutName();
 			lastTime = System.currentTimeMillis();
-			JSONObject msgJson = new JSONObject();
-			msgJson.put("type", "stream");
-			msgJson.put("content", accu);
-			String message = msgJson.toJSONString();
+			JSONObject bufferJson = new JSONObject();
+			bufferJson.put("buffer", accu);
+			
+			JSONObject mapArgs = new JSONObject();
+			mapArgs.put("args", bufferJson);
+			
+			String message = mapArgs.toJSONString();
+
+			// Hack to start with {"cmd":"operations", ... }
+			message = "{\"cmd\":\"operations\"," + message.substring(1);
+
 			try {
 				channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
 			} catch (IOException ex) {
