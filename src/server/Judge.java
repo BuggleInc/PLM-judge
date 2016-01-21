@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -66,7 +67,13 @@ public class Judge {
 		ProgrammingLanguage progLang = ProgrammingLanguage.getProgrammingLanguage(request.getLanguage());
 		String code = request.getCode();
 		
-		ExecutionProgress result = exerciseRunner.run(exo, progLang, code);
+		ExecutionProgress result = null;
+		try {
+			result = exerciseRunner.run(exo, progLang, code).get();
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		flushListeners();
 		sendResult(result);
 		System.err.println("Result: " + result.toJSON().toString());

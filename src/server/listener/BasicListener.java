@@ -30,7 +30,7 @@ public class BasicListener implements IWorldView {
 	Connector connector;
 	long lastTime = System.currentTimeMillis();
 	long delay;
-	JSONArray accu = new JSONArray();
+	JSONArray buffer = new JSONArray();
 	
 	int cnt = 0;
 
@@ -59,32 +59,21 @@ public class BasicListener implements IWorldView {
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	public void worldHasMoved() {
 		Long currentTime = System.currentTimeMillis();
 		int length = currWorld.getSteps().size();
 		for(int i=cnt; i<length; i++) {
 			List<Operation> operations = currWorld.getSteps().get(i);
 			
-			JSONObject mapArgs = new JSONObject();
-			
-			JSONArray jsonOperations = new JSONArray();
-			for(Operation operation: operations) {
-				jsonOperations.add(operation.toJSON());
-			}
-			
-			mapArgs.put("operations", jsonOperations);
-			mapArgs.put("worldID", currWorld.getName());
-			
-			accu.add(mapArgs);
-			if(lastTime + delay <= currentTime) {
-				System.err.println("On envoie");
-				lastTime = currentTime;
-				send();
-			}
-			else {
-				System.err.println("On bufferize");
-			}
+			Operation.addOperationsToBuffer(buffer, currWorld.getName(), operations);
+		}
+		if(lastTime + delay <= currentTime) {
+			System.err.println("On envoie");
+			lastTime = System.currentTimeMillis();
+			send();
+		}
+		else {
+			System.err.println("On bufferize");
 		}
 		cnt = length;
 	}
@@ -108,28 +97,19 @@ public class BasicListener implements IWorldView {
 	
 	@SuppressWarnings("unchecked")
 	private void addOperations(JSONObject msgItem) {
-		accu.add(msgItem);
+		buffer.add(msgItem);
 	}
 	
 	/**
 	 * Sends all accumulated messages.
 	 */
-	@SuppressWarnings("unchecked")
 	public void send() {
-		if(!accu.isEmpty()) {
+		if(!buffer.isEmpty()) {
 			Channel channel = connector.cOut();
 			String sendTo = connector.cOutName();
-			lastTime = System.currentTimeMillis();
-			JSONObject bufferJson = new JSONObject();
-			bufferJson.put("buffer", accu);
-			
-			JSONObject mapArgs = new JSONObject();
-			mapArgs.put("args", bufferJson);
-			
-			String message = mapArgs.toJSONString();
 
 			// Hack to start with {"cmd":"operations", ... }
-			message = "{\"cmd\":\"operations\"," + message.substring(1);
+			String message = Operation.operationsBufferToMsg(buffer);
 
 			try {
 				channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
@@ -137,7 +117,7 @@ public class BasicListener implements IWorldView {
 				ex.printStackTrace();
 			}
 			Main.logger.log(0, "Sent stream message (" + sendTo + ")");
-			accu.clear();
+			buffer.clear();
 		}
 	}
 }
