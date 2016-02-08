@@ -26,6 +26,7 @@ import com.rabbitmq.client.Channel;
  */
 public class BasicListener implements IWorldView {
 
+	private static final int MAX_SIZE = 10000;
 	private World currWorld = null;
 	Connector connector;
 	long lastTime = System.currentTimeMillis();
@@ -67,7 +68,7 @@ public class BasicListener implements IWorldView {
 			
 			Operation.addOperationsToBuffer(buffer, currWorld.getName(), operations);
 		}
-		if(lastTime + delay <= currentTime) {
+		if(buffer.size() >= MAX_SIZE || lastTime + delay <= currentTime) {
 			System.err.println("On envoie");
 			lastTime = System.currentTimeMillis();
 			send();
