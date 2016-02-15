@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.json.simple.JSONArray;
@@ -14,7 +13,6 @@ import com.rabbitmq.client.Channel;
 
 import plm.core.log.Logger;
 import plm.core.model.Game;
-import plm.universe.IWorldView;
 import plm.universe.Operation;
 import plm.universe.World;
 import main.java.server.Connector;
@@ -28,7 +26,7 @@ import main.java.server.parser.StreamMsg;
  * @author Tanguy
  * @see StreamMsg
  */
-public class BasicListener implements IWorldView {
+public class BasicListener {
 
 	private static final int MAX_SIZE = 10000;
 
@@ -75,7 +73,6 @@ public class BasicListener implements IWorldView {
 	 */
 	public void setWorld(World world) {
 		currWorld = world;
-		currWorld.addWorldUpdatesListener(this);
 	}
 
 	public void flush() {
@@ -95,15 +92,6 @@ public class BasicListener implements IWorldView {
 		return new BasicListener(connector, delay);
 	}
 	
-	@Override
-	public void worldHasMoved() {
-	}
-
-	@Override
-	public void worldHasChanged() {
-		// NO OP
-	}
-
 	/**
 	 * 
 	 * @param msg the message to send as MessageStream
@@ -143,11 +131,10 @@ public class BasicListener implements IWorldView {
 	}
 
 	public void stopSes() {
-	ses.shutdown();
+		ses.shutdown();
 		try {
 			ses.awaitTermination(1L, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
