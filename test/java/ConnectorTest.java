@@ -26,14 +26,14 @@ import com.rabbitmq.client.AMQP.Queue.PurgeOk;
 import com.rabbitmq.client.AMQP.Tx.CommitOk;
 import com.rabbitmq.client.AMQP.Tx.RollbackOk;
 
-import server.Connector;
-import server.Main;
+import main.java.server.Connector;
 
 public class ConnectorTest extends Connector {
 	public final static int MAX_LEN = 500;
 	
 	@Override
-	public void init(String host, int port) {
+	public ConnectorTest(String host, int port) {
+		super(host, port);
 		channelIn = new ChannelTest();
 		channelOut = new ChannelTest();
 	}

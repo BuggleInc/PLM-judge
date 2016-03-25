@@ -1,22 +1,18 @@
 package main.java.server.listener;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.rabbitmq.client.Channel;
 
-import plm.core.log.Logger;
-import plm.core.model.Game;
-import plm.universe.Operation;
-import plm.universe.World;
 import main.java.server.Connector;
 import main.java.server.parser.StreamMsg;
+import plm.core.model.json.JSONUtils;
+import plm.universe.World;
 
 /**
  * The {@link IWorldView} implementation. Linked to the current {@link Game} instance, and is called every time the world moves. 
@@ -34,7 +30,6 @@ public class BasicListener {
 	Connector connector;
 	long lastTime = System.currentTimeMillis();
 	long delay;
-	JSONArray buffer = new JSONArray();
 
 	private ScheduledExecutorService ses;
 
@@ -52,15 +47,9 @@ public class BasicListener {
 		Runnable cmd = new Runnable() {
 			@Override
 			public void run() {
-				int length = currWorld.getSteps().size();
-				if(MAX_SIZE < length) {
-					length = MAX_SIZE;
-				}
-				for(int i=0; i<length; i++) {
-					List<Operation> operations = currWorld.getSteps().poll();
-					Operation.addOperationsToBuffer(buffer, currWorld.getName(), operations);
-				}
-				send();
+				if(!currWorld.getSteps().isEmpty()) {
+			  	    send(JSONUtils.operationsToJSON(currWorld, MAX_SIZE));
+			  	}
 			}
 		};
 
@@ -76,15 +65,9 @@ public class BasicListener {
 	}
 
 	public void flush() {
-		int length = currWorld.getSteps().size();
-		for(int i=0; i<length; i++) {
-			List<Operation> operations = currWorld.getSteps().poll();
-			Operation.addOperationsToBuffer(buffer, currWorld.getName(), operations);
-			if(buffer.size()==MAX_SIZE) {
-				send();
-			}
-		}
-		send();
+		if(!currWorld.getSteps().isEmpty()) {
+	  	    send(JSONUtils.operationsToJSON(currWorld, -1));
+	  	}
 	}
 
 	@Override
@@ -101,32 +84,19 @@ public class BasicListener {
 		JSONObject res = new JSONObject();
 		res.put("cmd", "outputStream");
 		res.put("msg", msg);
-		addOperations(res);
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void addOperations(JSONObject msgItem) {
-		buffer.add(msgItem);
 	}
 	
 	/**
 	 * Sends all accumulated messages.
 	 */
-	public void send() {
-		if(!buffer.isEmpty()) {
-			Channel channel = connector.cOut();
-			String sendTo = connector.cOutName();
+	public void send(String message) {
+		Channel channel = connector.cOut();
+		String sendTo = connector.cOutName();
 
-			// Hack to start with {"cmd":"operations", ... }
-			String message = Operation.operationsBufferToMsg("operations", buffer);
-
-			try {
-				channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-			Logger.log(2, "Sent stream message (" + sendTo + ")");
-			buffer.clear();
+		try {
+			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 	}
 

@@ -1,10 +1,13 @@
 package main.java.server.parser;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import plm.core.log.Logger;
+import plm.core.model.json.JSONUtils;
+import plm.core.model.lesson.BlankExercise;
+import plm.core.model.lesson.Exercise;
 
 /**
  * Parses a JSON request message (in the form of a {@link String}) into 
@@ -13,48 +16,35 @@ import plm.core.log.Logger;
  */
 public class RequestMsg {
 
-	private String jsonExercise;
-	private String loc;
-	private String lang;
+	private Exercise exercise;
+	private String localization;
+	private String language;
 	private String code;
 	private String replyQueue;
-	
-	private RequestMsg() {
-		// NO OP
-	}
-	
-	/**
-	 * Factory. Retrieves the data from the given message.
-	 * @param s The message, as a JSON-formatted {@link String}
-	 * @return a filled RequestMsg.
-	 */
-	public static RequestMsg readMessage(String s) {
-		RequestMsg replyData = new RequestMsg();
-		JSONParser p = new JSONParser();
+
+	public RequestMsg(String message) {
 		try {
-			JSONObject replyJSON = (JSONObject) p.parse(s);
-			replyData.jsonExercise = (String) replyJSON.get("exercise");
-			replyData.loc = (String) replyJSON.get("localization");
-			replyData.lang = (String) replyJSON.get("language");
-			replyData.code = (String) replyJSON.get("code");
-			replyData.replyQueue = (String) replyJSON.get("replyQueue");
-		} catch (ParseException e) {
-			Logger.log(2, "Parse exception : message in queue didn't fit the expected format.");
+			JsonNode json = JSONUtils.mapper.readTree(message);
+			exercise = JSONUtils.jsonToExercise(json.get("exercise"));
+			localization = json.path("localization").asText();
+			language = json.path("language").asText();
+			code = json.path("code").asText();
+			replyQueue = json.path("replyQueue").asText();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return replyData;
 	}
 
-	public String getJSONExercise() {
-		return jsonExercise;
+	public Exercise getExercise() {
+		return exercise;
 	}
 
 	/**
 	 * Retrieves the messages' localization.
 	 * @return the PLM-compliant natural language.
 	 */
-	public String getLocale() {
-		return loc;
+	public String getLocalization() {
+		return localization;
 	}
 
 	/**
@@ -62,7 +52,7 @@ public class RequestMsg {
 	 * @return the PLM-compliant programming language.
 	 */
 	public String getLanguage() {
-		return lang;
+		return language;
 	}
 
 	/**
