@@ -26,3 +26,4 @@ libraryDependencies ++= Seq(
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
 
 mainClass in (Compile,run) := Some("main.java.Main")
+mainClass in assembly := Some("main.java.Main")
