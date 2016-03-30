@@ -1,12 +1,11 @@
 package main.java.server.parser;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import plm.core.log.Logger;
 import plm.core.model.json.JSONUtils;
-import plm.core.model.lesson.BlankExercise;
 import plm.core.model.lesson.Exercise;
 
 /**
@@ -17,7 +16,7 @@ import plm.core.model.lesson.Exercise;
 public class RequestMsg {
 
 	private Exercise exercise;
-	private String localization;
+	private Locale locale;
 	private String language;
 	private String code;
 	private String replyQueue;
@@ -26,7 +25,7 @@ public class RequestMsg {
 		try {
 			JsonNode json = JSONUtils.mapper.readTree(message);
 			exercise = JSONUtils.jsonToExercise(json.get("exercise"));
-			localization = json.path("localization").asText();
+			locale = new Locale(json.path("localization").asText());
 			language = json.path("language").asText();
 			code = json.path("code").asText();
 			replyQueue = json.path("replyQueue").asText();
@@ -43,8 +42,8 @@ public class RequestMsg {
 	 * Retrieves the messages' localization.
 	 * @return the PLM-compliant natural language.
 	 */
-	public String getLocalization() {
-		return localization;
+	public Locale getLocalization() {
+		return locale;
 	}
 
 	/**

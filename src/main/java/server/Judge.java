@@ -34,7 +34,6 @@ public class Judge {
 
 	public Judge(Connector connector) {
 		this.connector = connector;
-		exerciseRunner = new ExerciseRunner(new Locale("en"));
 	}
 
 	public void handleMessage() {
@@ -51,6 +50,8 @@ public class Judge {
 		}
 
 		RequestMsg request = new RequestMsg(message);
+
+		exerciseRunner = new ExerciseRunner(request.getLocalization());
 
 		setReplyQueue(request.getReplyQueue());
 
