@@ -6,7 +6,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -23,6 +22,7 @@ import plm.core.model.lesson.ExecutionProgress.outcomeKind;
 import plm.core.model.lesson.Exercise;
 import plm.core.model.lesson.Exercise.WorldKind;
 import plm.core.model.lesson.ExerciseRunner;
+import plm.core.model.lesson.UserSettings;
 import plm.universe.World;
 
 public class Judge {
@@ -60,6 +60,8 @@ public class Judge {
 		
 		ProgrammingLanguage progLang = ProgrammingLanguage.getProgrammingLanguage(request.getLanguage());
 		String code = request.getCode();
+
+		exo.setSettings(new UserSettings(request.getLocalization(), progLang));
 		
 		ExecutionProgress result = null;
 		try {
