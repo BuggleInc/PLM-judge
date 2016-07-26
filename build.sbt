@@ -12,11 +12,7 @@ autoScalaLibrary := false
 
 crossPaths := false
 
-EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
-
 scalaVersion := "2.11.4"
-
-val kamonVersion = "0.5.2"
 
 libraryDependencies ++= Seq(
   "junit" % "junit" % "4.10",
