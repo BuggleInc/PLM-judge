@@ -20,17 +20,17 @@ public class Main {
 		LangJava java = new LangJava(false);
 		LangScala scala = new LangScala(false);
 		LangPython python = new LangPython(false);
-		
+
 		ProgrammingLanguage.registerSupportedProgLang(java);
 		ProgrammingLanguage.registerSupportedProgLang(scala);
 		ProgrammingLanguage.registerSupportedProgLang(python);
 	}
-	
+
 	public static void main(String[] argv) {
-		host = System.getenv("MESSAGEQ_PORT_5672_TCP_ADDR");
-		port = System.getenv("MESSAGEQ_PORT_5672_TCP_PORT");
-		host = /*host != null ? host : */"localhost";
-		port = /*port != null ? port : */"5672";
+		host = System.getenv("MESSAGEQUEUE_ADDR");
+		port = System.getenv("MESSAGEQUEUE_PORT");
+		host = host != null ? host : "localhost";
+		port = port != null ? port : "5672";
 
 		initSupportedProgLang();
 
