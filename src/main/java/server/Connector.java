@@ -22,7 +22,7 @@ public class Connector {
 	protected Channel channelIn;
 	protected Channel channelOut;
 	
-    private Long defaultTimeout = new Long(10000);
+    private Long defaultTimeout = new Long(15000);
 
 	private QueueingConsumer consumer;
 	
@@ -50,7 +50,7 @@ public class Connector {
 		try {
 			channelOut = connection.createChannel();
             Map<String, Object> args = new HashMap<String, Object>();
-            args.put("x-message-ttl", 5000);
+            args.put("x-message-ttl", defaultTimeout);
 			channelOut.queueDeclare(replyQueueName, false, false, true, args);
 		} catch (IOException e) {
 			Logger.log(2, "Host unknown. Aborting...");
