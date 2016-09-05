@@ -3,8 +3,8 @@
 NB_ERROR=0
 MAX_ERROR=5
 
-VERSION="v2.0-rc2"
-FILENAME="PLM-judge-assembly-2.0-rc2.jar"
+VERSION="v2.0.0"
+FILENAME="PLM-judge-assembly-2.0.0.jar"
 
 MESSAGEQUEUE_ADDR="plm.telecomnancy.univ-lorraine.fr"
 export MESSAGEQUEUE_ADDR
