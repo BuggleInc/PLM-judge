@@ -6,7 +6,7 @@ organization := "inc.buggle"
 
 name := "PLM-judge"
 
-version := "2.0.0-rc3"
+version := "2.0.0-rc4"
 
 autoScalaLibrary := false
 
