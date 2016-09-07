@@ -52,6 +52,7 @@ public class Judge {
 		RequestMsg request = new RequestMsg(message);
 
 		exerciseRunner = new ExerciseRunner(request.getLocalization());
+		exerciseRunner.setMaxNumberOfTries(5);
 
 		setReplyQueue(request.getReplyQueue());
 
@@ -62,7 +63,7 @@ public class Judge {
 		String code = request.getCode();
 
 		exo.setSettings(new UserSettings(request.getLocalization(), progLang));
-		
+
 		ExecutionProgress result = null;
 		try {
 			result = exerciseRunner.run(exo, progLang, code).get();
