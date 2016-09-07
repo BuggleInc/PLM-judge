@@ -3,8 +3,8 @@
 NB_ERROR=0
 MAX_ERROR=5
 
-VERSION="v2.0.1"
-FILENAME="PLM-judge-assembly-2.0.1.jar"
+VERSION="v2.0.2"
+FILENAME="PLM-judge-assembly-2.0.2.jar"
 
 MESSAGEQUEUE_ADDR="plm.telecomnancy.univ-lorraine.fr"
 export MESSAGEQUEUE_ADDR
@@ -26,7 +26,7 @@ fi
 echo "Start running $FILENAME"
 
 while [ "$NB_ERROR" -lt "$MAX_ERROR" ]; do
-  nice java -Xms512m -Xmx1024m -jar "$FILENAME"
+  nice java -Xms1024m -Xmx1024m -jar "$FILENAME"
   let "NB_ERROR += $?"
 done
 
