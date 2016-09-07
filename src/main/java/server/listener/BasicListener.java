@@ -47,12 +47,22 @@ public class BasicListener {
 			@Override
 			public void run() {
 				if(!currWorld.getSteps().isEmpty()) {
-			  	    send(JSONUtils.operationsToJSON(currWorld, MAX_SIZE));
-			  	}
+					sendOperations(currWorld, MAX_SIZE);
+				}
 			}
 		};
 
 		ses.scheduleAtFixedRate(cmd, 0, 1000, TimeUnit.MILLISECONDS);
+	}
+
+	public void sendOperations(World currWorld, int nbMessages) {
+		try {
+			send(JSONUtils.operationsToJSON(currWorld, nbMessages));
+		} catch (OutOfMemoryError e) {
+			// We want to stop the JVM to be able to restart the judge
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 
 	/**
@@ -65,7 +75,7 @@ public class BasicListener {
 
 	public void flush() {
 		if(!currWorld.getSteps().isEmpty()) {
-	  	    send(JSONUtils.operationsToJSON(currWorld, -1));
+			sendOperations(currWorld, -1);
 	  	}
 	}
 
@@ -105,6 +115,10 @@ public class BasicListener {
 			ses.awaitTermination(1L, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		} catch (IllegalMonitorStateException e) {
+			// We want to stop the JVM to be able to restart the judge
+			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 }
