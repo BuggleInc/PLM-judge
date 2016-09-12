@@ -3,8 +3,8 @@
 NB_ERROR=0
 MAX_ERROR=5
 
-VERSION="v2.0.2"
-FILENAME="PLM-judge-assembly-2.0.2.jar"
+VERSION="2.0.3"
+FILENAME="PLM-judge-assembly-$VERSION.jar"
 
 MESSAGEQUEUE_ADDR="plm.telecomnancy.univ-lorraine.fr"
 export MESSAGEQUEUE_ADDR
@@ -16,7 +16,7 @@ terminating() {
 
 if [ ! -f "$FILENAME" ]; then
   echo "Downloading $FILENAME..."
-  wget "https://github.com/BuggleInc/PLM-judge/releases/download/$VERSION/$FILENAME"
+  wget "https://github.com/BuggleInc/PLM-judge/releases/download/v$VERSION/$FILENAME"
   if [ $? != 0 ] ; then
     echo "Error occurred while downloading $FILENAME..."
     terminating
