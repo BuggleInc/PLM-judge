@@ -74,8 +74,8 @@ public class BasicListener {
 	}
 
 	public void flush() {
-		if(!currWorld.getSteps().isEmpty()) {
-			sendOperations(currWorld, -1);
+		while(!currWorld.getSteps().isEmpty()) {
+			sendOperations(currWorld, MAX_SIZE);
 	  	}
 	}
 
