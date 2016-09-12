@@ -52,7 +52,7 @@ public class Judge {
 		RequestMsg request = new RequestMsg(message);
 
 		exerciseRunner = new ExerciseRunner(request.getLocalization());
-		exerciseRunner.setMaxNumberOfTries(5);
+		exerciseRunner.setMaxNumberOfTries(3);
 
 		setReplyQueue(request.getReplyQueue());
 
