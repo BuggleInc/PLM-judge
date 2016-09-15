@@ -18,14 +18,16 @@ public class Connector {
 	private final static String QUEUE_NAME_REQUEST = "worker_in";
 	
 	private String replyQueueName = "";
+
+    private String clientQueueName = "";
 	private Connection connection;
 	protected Channel channelIn;
 	protected Channel channelOut;
-	
+
     private Long defaultTimeout = new Long(15000);
 
 	private QueueingConsumer consumer;
-	
+
 	public Connector(String host, int port) {
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
@@ -57,7 +59,17 @@ public class Connector {
 			System.exit(1);
 	    }
 	}
-	
+
+	public void initClientQueue(String clientQueueName) {
+		this.clientQueueName = clientQueueName;
+		try {
+			channelOut.queueDeclare(clientQueueName, false, false, true, null);
+		} catch (IOException e) {
+			Logger.log(2, "Host unknown. Aborting...");
+			System.exit(1);
+		}
+	}
+
 	public void closeConnections() {
 		try {
 			connection.close();
@@ -94,5 +106,9 @@ public class Connector {
 	public String cOutName() {
 		return replyQueueName;
 	}
+
+    public String getClientQueueName() {
+        return clientQueueName;
+    }
 
 }

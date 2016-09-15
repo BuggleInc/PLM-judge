@@ -20,6 +20,7 @@ public class RequestMsg {
 	private String language;
 	private String code;
 	private String replyQueue;
+	private String clientQueue;
 
 	public RequestMsg(String message) {
 		try {
@@ -29,6 +30,7 @@ public class RequestMsg {
 			language = json.path("language").asText();
 			code = json.path("code").asText();
 			replyQueue = json.path("replyQueue").asText();
+			clientQueue = json.path("clientQueue").asText();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -64,5 +66,9 @@ public class RequestMsg {
 	
 	public String getReplyQueue() {
 		return replyQueue;
+	}
+
+	public String getClientQueue() {
+		return clientQueue;
 	}
 }

@@ -55,6 +55,7 @@ public class Judge {
 		exerciseRunner.setMaxNumberOfTries(3);
 
 		setReplyQueue(request.getReplyQueue());
+		setClientQueue(request.getClientQueue());
 
 		Exercise exo = request.getExercise();
 		setListeners(exo);
@@ -74,6 +75,8 @@ public class Judge {
 		if(result.outcome != outcomeKind.TIMEOUT) {
 			flushListeners();
 		}
+
+		sendUnsubscribe();
 		sendResult(result);
 	}
 
@@ -82,6 +85,10 @@ public class Judge {
 		Logger.log(0, "Received request from '" + replyQueue + "'.");
 		sendAck();
 		Logger.log(0, "Send ack");
+	}
+
+	public void setClientQueue(String clientQueue) {
+		connector.initClientQueue(clientQueue);
 	}
 
 	public void setListeners(Exercise exo) {
@@ -116,6 +123,21 @@ public class Judge {
 
 		String message = JSONUtils.createMessage("ack", mapArgs);
 		String sendTo = connector.cOutName();
+		try {
+			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void sendUnsubscribe() {
+		Channel channel = connector.cOut();
+		Map<String, Object> mapArgs = new HashMap<String, Object>();
+
+		String message = JSONUtils.createMessage("unsubscribe", mapArgs);
+		String sendTo = connector.getClientQueueName();
 		try {
 			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e) {

@@ -27,7 +27,6 @@ public class BasicListener {
 
 	private World currWorld = null;
 	Connector connector;
-	long lastTime = System.currentTimeMillis();
 	long delay;
 
 	private ScheduledExecutorService ses;
@@ -100,7 +99,7 @@ public class BasicListener {
 	 */
 	public void send(String message) {
 		Channel channel = connector.cOut();
-		String sendTo = connector.cOutName();
+		String sendTo = connector.getClientQueueName();
 
 		try {
 			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
