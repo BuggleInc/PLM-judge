@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.QueueingConsumer;
@@ -27,38 +28,47 @@ import plm.universe.World;
 
 public class Judge {
 
+	private final String QUEUE_NAME_REQUEST = "worker_in";
+
 	private Connector connector;
 
 	private ExerciseRunner exerciseRunner;
 	private List<BasicListener> listeners = new ArrayList<BasicListener>();
+	private Long defaultTimeout = new Long(15000);
 
 	public Judge(Connector connector) {
 		this.connector = connector;
 	}
 
 	public void handleMessage() {
-		Logger.log(0, "Retrieving request handler.");
-		connector.prepDelivery();
+		Channel channel = connector.generateChannel();
 
-		Logger.log(0, "Waiting for request");
-		QueueingConsumer.Delivery delivery = connector.getDelivery();
-		String message = "";
-		try {
-			message = new String(delivery.getBody(),"UTF-8");
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}
+		Logger.log(0, "Initializing connection to request message queue...");
+		initRequestMQ(channel);
 
+		Logger.log(0, "Waiting for request...");
+		String message = connector.retrieveMessage(channel, QUEUE_NAME_REQUEST);
+
+		Logger.log(0, "Parsing the request...");
 		RequestMsg request = new RequestMsg(message);
-
 		exerciseRunner = new ExerciseRunner(request.getLocalization());
 		exerciseRunner.setMaxNumberOfTries(3);
 
-		setReplyQueue(request.getReplyQueue());
-		setClientQueue(request.getClientQueue());
+		Logger.log(0, "Request parsed");
+		Logger.log(0, "Initializing connection to reply and client message queues...");
 
+		String replyQueue = request.getReplyQueue();
+		initReplyQueue(channel, replyQueue);
+
+		String clientQueue = request.getClientQueue();
+		initClientQueue(channel, clientQueue);
+
+		Logger.log(0, "Sending ack...");
+		sendAck(channel, replyQueue);
+
+		Logger.log(0, "Processing execution request...");
 		Exercise exo = request.getExercise();
-		setListeners(exo);
+		setListeners(request.getClientQueue(), exo);
 		
 		ProgrammingLanguage progLang = ProgrammingLanguage.getProgrammingLanguage(request.getLanguage());
 		String code = request.getCode();
@@ -71,36 +81,53 @@ public class Judge {
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
+
+		Logger.log(0, "Execution ended");
+		Logger.log(0, "Flushing the remaining operations...");
 		stopListeners();
 		if(result.outcome != outcomeKind.TIMEOUT) {
-			flushListeners();
+			flushListeners(channel);
 		}
 
-		sendUnsubscribe();
-		sendResult(result);
+		Logger.log(0, "Operations flushed");
+		Logger.log(0, "Sending closing messages...");
+		sendUnsubscribe(channel, clientQueue);
+		sendResult(channel, replyQueue, result);
+
+		Logger.log(0, "Terminating");
+		closeChannel(channel);
 	}
 
-	public void setReplyQueue(String replyQueue) {
-		connector.initReplyQueue(replyQueue);
+	public void initRequestMQ(Channel channel) {
+		// Connect to message queue to retrieve a request execution
+		Map<String, Object> args = new HashMap<String, Object>();
+		args.put("x-message-ttl", defaultTimeout);
+		connector.initMQ(channel, QUEUE_NAME_REQUEST, false, false, false, args);
+	}
+
+	public void initReplyQueue(Channel channel, String replyQueue) {
+		Map<String, Object> args = new HashMap<>();
+		args.put("x-message-ttl", defaultTimeout);
+		connector.initMQ(channel, replyQueue, false, false, true, args);
 		Logger.log(0, "Received request from '" + replyQueue + "'.");
-		sendAck();
-		Logger.log(0, "Send ack");
 	}
 
-	public void setClientQueue(String clientQueue) {
-		connector.initClientQueue(clientQueue);
+	public void initClientQueue(Channel channel, String clientQueue) {
+		connector.initMQ(channel, clientQueue, false, false, true, null);
 	}
 
-	public void setListeners(Exercise exo) {
+	public void setListeners(String clientQueue, Exercise exo) {
 		ListenerOutStream listenerOut = null;
 		for(World w : exo.getWorlds(WorldKind.CURRENT)) {
-			BasicListener l = new BasicListener(connector, 1000);
+			BasicListener l = new BasicListener(connector, clientQueue, 1000);
 			listeners.add(l);
+			/*
 			if(listenerOut == null) {
 				listenerOut = new ListenerOutStream(System.out, l);
 				PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
 		        System.setOut(outStream);
 			}
+			*/
 			l.setWorld(w);
 		}
 	}
@@ -111,35 +138,37 @@ public class Judge {
 		}
 	}
 
-	public void flushListeners() {
+	public void flushListeners(Channel channel) {
 		for(BasicListener l : listeners) {
-			l.flush();
+			l.flush(channel);
 		}
 	}
 
-	public void sendAck() {
-		Channel channel = connector.cOut();
-		Map<String, Object> mapArgs = new HashMap<String, Object>();
-
+	public void sendAck(Channel channel, String messageQueue) {
+		Map<String, Object> mapArgs = new HashMap<>();
 		String message = JSONUtils.createMessage("ack", mapArgs);
-		String sendTo = connector.cOutName();
-		try {
-			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+		sendMessage(channel, messageQueue, message);
 	}
 
-	public void sendUnsubscribe() {
-		Channel channel = connector.cOut();
-		Map<String, Object> mapArgs = new HashMap<String, Object>();
-
+	public void sendUnsubscribe(Channel channel, String messageQueue) {
+		Map<String, Object> mapArgs = new HashMap<>();
 		String message = JSONUtils.createMessage("unsubscribe", mapArgs);
-		String sendTo = connector.getClientQueueName();
+
+		sendMessage(channel, messageQueue, message);
+	}
+
+	public void sendResult(Channel channel, String messageQueue, ExecutionProgress result) {
+		Map<String, Object> mapArgs = new HashMap<>();
+		mapArgs.put("result", result);
+		String message = JSONUtils.createMessage("executionResult", mapArgs);
+
+		sendMessage(channel, messageQueue, message);
+	}
+
+	public void sendMessage(Channel channel, String messageQueue, String message) {
 		try {
-			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
+			channel.basicPublish("", messageQueue, null, message.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -147,19 +176,12 @@ public class Judge {
 		}
 	}
 
-	public void sendResult(ExecutionProgress result) {
-		Channel channel = connector.cOut();
-
-		Map<String, Object> mapArgs = new HashMap<String, Object>();
-		mapArgs.put("result", result);
-
-		String message = JSONUtils.createMessage("executionResult", mapArgs);
-		String sendTo = connector.cOutName();
+	public void closeChannel(Channel channel) {
 		try {
-			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
+			channel.close();
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (TimeoutException e) {
 			e.printStackTrace();
 		}
 	}

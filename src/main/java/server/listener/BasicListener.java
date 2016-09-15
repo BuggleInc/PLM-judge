@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.json.simple.JSONObject;
 
@@ -25,20 +26,22 @@ public class BasicListener {
 
 	private static final int MAX_SIZE = 10000;
 
-	private World currWorld = null;
-	Connector connector;
-	long delay;
-
+	private World currWorld;
+	private String messageQueue;
+	private Connector connector;
+	private long delay;
 	private ScheduledExecutorService ses;
 
 	/**
 	 * The {@link BasicListener} constructor.
 	 * @param connector the used connector
-	 * @param timeout The minimal time between two stream messages. Set to 0 to stream each operation individually.
+	 * @param messageQueue the message queue used to publish messages
+	 * @param delay The minimal time between two stream messages.
 	 */
-	public BasicListener(Connector connector, long delay) {
+	public BasicListener(Connector connector, String messageQueue, long delay) {
 		this.delay = delay;
 		this.connector = connector;
+		this.messageQueue = messageQueue;
 		
 		ses = Executors.newSingleThreadScheduledExecutor();
 		
@@ -46,17 +49,26 @@ public class BasicListener {
 			@Override
 			public void run() {
 				if(!currWorld.getSteps().isEmpty()) {
-					sendOperations(currWorld, MAX_SIZE);
+					Channel channel = connector.generateChannel();
+					connector.initMQ(channel, messageQueue, false, false, true, null);
+					sendOperations(channel, currWorld, MAX_SIZE);
+					try {
+						channel.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (TimeoutException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		};
 
-		ses.scheduleAtFixedRate(cmd, 0, 1000, TimeUnit.MILLISECONDS);
+		ses.scheduleAtFixedRate(cmd, 0, delay, TimeUnit.MILLISECONDS);
 	}
 
-	public void sendOperations(World currWorld, int nbMessages) {
+	public void sendOperations(Channel channel, World currWorld, int nbMessages) {
 		try {
-			send(JSONUtils.operationsToJSON(currWorld, nbMessages));
+			send(channel, JSONUtils.operationsToJSON(currWorld, nbMessages));
 		} catch (OutOfMemoryError e) {
 			// We want to stop the JVM to be able to restart the judge
 			e.printStackTrace();
@@ -72,15 +84,15 @@ public class BasicListener {
 		currWorld = world;
 	}
 
-	public void flush() {
+	public void flush(Channel channel) {
 		while(!currWorld.getSteps().isEmpty()) {
-			sendOperations(currWorld, MAX_SIZE);
+			sendOperations(channel, currWorld, MAX_SIZE);
 	  	}
 	}
 
 	@Override
 	public BasicListener clone() {
-		return new BasicListener(connector, delay);
+		return new BasicListener(connector, messageQueue, delay);
 	}
 	
 	/**
@@ -97,12 +109,9 @@ public class BasicListener {
 	/**
 	 * Sends all accumulated messages.
 	 */
-	public void send(String message) {
-		Channel channel = connector.cOut();
-		String sendTo = connector.getClientQueueName();
-
+	public void send(Channel channel, String message) {
 		try {
-			channel.basicPublish("", sendTo, null, message.getBytes("UTF-8"));
+			channel.basicPublish("", messageQueue, null, message.getBytes("UTF-8"));
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
