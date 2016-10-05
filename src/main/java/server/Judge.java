@@ -52,7 +52,7 @@ public class Judge {
 		Logger.log(0, "Parsing the request...");
 		RequestMsg request = new RequestMsg(message);
 		exerciseRunner = new ExerciseRunner(request.getLocalization());
-		exerciseRunner.setMaxNumberOfTries(3);
+		exerciseRunner.setMaxNumberOfTries(10);
 
 		Logger.log(0, "Request parsed");
 		Logger.log(0, "Initializing connection to reply and client message queues...");
