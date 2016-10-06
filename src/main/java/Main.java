@@ -2,10 +2,7 @@ package main.java;
 
 import main.java.server.Connector;
 import main.java.server.Judge;
-import plm.core.lang.LangJava;
-import plm.core.lang.LangPython;
-import plm.core.lang.LangScala;
-import plm.core.lang.ProgrammingLanguage;
+import plm.core.lang.*;
 
 /**
  * The main class. This should be the entry point of the Judge.
@@ -20,10 +17,12 @@ public class Main {
 		LangJava java = new LangJava(false);
 		LangScala scala = new LangScala(false);
 		LangPython python = new LangPython(false);
+		LangBlockly blockly = new LangBlockly(false);
 
 		ProgrammingLanguage.registerSupportedProgLang(java);
 		ProgrammingLanguage.registerSupportedProgLang(scala);
 		ProgrammingLanguage.registerSupportedProgLang(python);
+		ProgrammingLanguage.registerSupportedProgLang(blockly);
 	}
 
 	public static void main(String[] argv) {
