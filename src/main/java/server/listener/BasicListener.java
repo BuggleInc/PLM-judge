@@ -38,7 +38,8 @@ public class BasicListener {
 	 * @param messageQueue the message queue used to publish messages
 	 * @param delay The minimal time between two stream messages.
 	 */
-	public BasicListener(Connector connector, String messageQueue, long delay) {
+	public BasicListener(World world, final Connector connector, final String messageQueue, long delay) {
+		this.currWorld = world;
 		this.delay = delay;
 		this.connector = connector;
 		this.messageQueue = messageQueue;
@@ -76,14 +77,6 @@ public class BasicListener {
 		}
 	}
 
-	/**
-	 * Set or replaces the game world to listen to.
-	 * @param world
-	 */
-	public void setWorld(World world) {
-		currWorld = world;
-	}
-
 	public void flush(Channel channel) {
 		while(!currWorld.getSteps().isEmpty()) {
 			sendOperations(channel, currWorld, MAX_SIZE);
@@ -92,7 +85,7 @@ public class BasicListener {
 
 	@Override
 	public BasicListener clone() {
-		return new BasicListener(connector, messageQueue, delay);
+		return new BasicListener(currWorld, connector, messageQueue, delay);
 	}
 	
 	/**

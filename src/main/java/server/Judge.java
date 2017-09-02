@@ -1,7 +1,6 @@
 package main.java.server;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +10,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.QueueingConsumer;
 
 import main.java.server.listener.BasicListener;
 import main.java.server.parser.RequestMsg;
@@ -118,8 +116,8 @@ public class Judge {
 
 	public void setListeners(String clientQueue, Exercise exo) {
 		ListenerOutStream listenerOut = null;
-		for(World w : exo.getWorlds(WorldKind.CURRENT)) {
-			BasicListener l = new BasicListener(connector, clientQueue, 1000);
+		for(World world : exo.getWorlds(WorldKind.CURRENT)) {
+			BasicListener l = new BasicListener(world, connector, clientQueue, 1000);
 			listeners.add(l);
 			/*
 			if(listenerOut == null) {
@@ -128,7 +126,6 @@ public class Judge {
 		        System.setOut(outStream);
 			}
 			*/
-			l.setWorld(w);
 		}
 	}
 
