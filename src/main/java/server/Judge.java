@@ -115,17 +115,9 @@ public class Judge {
 	}
 
 	public void setListeners(String clientQueue, Exercise exo) {
-		ListenerOutStream listenerOut = null;
 		for(World world : exo.getWorlds(WorldKind.CURRENT)) {
 			BasicListener l = new BasicListener(world, connector, clientQueue, 1000);
 			listeners.add(l);
-			/*
-			if(listenerOut == null) {
-				listenerOut = new ListenerOutStream(System.out, l);
-				PrintStream outStream = new PrintStream(listenerOut, true);  //Direct to MyOutputStream, autoflush
-		        System.setOut(outStream);
-			}
-			*/
 		}
 	}
 
