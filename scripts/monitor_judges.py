@@ -49,11 +49,16 @@ def monitor_judge(judge_name):
     now = datetime.now()
     if (now - started_at) > timedelta(seconds=30):
         if not is_waiting(judge_name):
-            pid = int(subprocess.check_output(["docker top {} | tail -n 1".format(judge_name)], shell=True).split()[1])
-            if judge_name in MARKED_JUDGES and pid == MARKED_JUDGES[judge_name]:
-                restart_judge(judge_name)
-            else:
-                mark_judge(judge_name, pid)
+            try:
+                pid = int(subprocess.check_output(["docker top {} | tail -n 1".format(judge_name)], shell=True).split()[1])
+                if judge_name in MARKED_JUDGES and pid == MARKED_JUDGES[judge_name]:
+                    restart_judge(judge_name)
+                else:
+                    mark_judge(judge_name, pid)
+            except (IndexError, ValueError) as error:
+                # IndexError occurs if the container is restarting when processing the command docker top
+                # ValueError occurs if the container has not yet (or more?) running process
+                print "{} occured".format(error)
     else:
         if judge_name in MARKED_JUDGES:
             unmark_judge(judge_name)
