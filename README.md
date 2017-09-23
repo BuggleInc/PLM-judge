@@ -1,26 +1,34 @@
 # WebPLM - Worker
 
-This is a standalone program intended to serve as the compilation unit for the Programmer's Learning Machine project.
+This is a standalone program intended to serve as the compilation unit
+for the Programmer's Learning Machine (PLM).
 
 The PLM project can be found at : https://github.com/BuggleInc/PLM
 
 The WebPLM project can be found at : https://github.com/BuggleInc/webPLM
 
-### How to :
+### Quick Start
 
-The worker is available for launch via a dockerfile at :
-https://github.com/BuggleInc/plm-dockers/tree/split
-
-You can also directly compile and run it via the following commands :
+Get the dependency:
 ```shell
-javac -g -d bin -sourcepath src -cp lib/* src/server/Main.java
-jar cfm0 judge.jar manifest.txt -C bin . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-pre-20150202.jar lib/rabbitmq-client.jar
+sudo apt-get install rabbitmq-server
 ```
 
-Note that this program is intended to be used with the "split" branch of WebPLM. You can find it here :
-https://github.com/BuggleInc/webPLM/tree/split
+Get the precompiled docker image:
+https://github.com/BuggleInc/plm-dockers/tree/split
 
-## Test cases.
+Compile manually:
+```shell
+javac -g -d bin -sourcepath src -cp javac -g -d bin -sourcepath src -cp "lib/*" `find src -name '*.java'`
+jar cfe judge.jar main.java.Main -C bin . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-20151010.jar lib/rabbitmq-client.jar
+```
+
+Start it:
+```shell
+java -cp "lib/*" -jar judge.jar
+```
+
+## Test cases
 
 Workers can be tested after modification by simple test cases.
 Note that the test cases are intended to handle the worker's use-cases, not the actual PLM compilation. As of now, this part already has tests in the PLM project itself.
@@ -28,7 +36,7 @@ Note that the test cases are intended to handle the worker's use-cases, not the 
 The test manifest is : manifest_tests.txt
 It is advised to generate the JAR using the following commands :
 ```shell
-javac -g -d bin_tests -sourcepath src -cp lib/* src/test/ValidTests.java
+javac -g -d bin_tests -sourcepath src -cp "lib/*" src/test/ValidTests.java
 jar cfm0 judge_tests.jar manifest_tests.txt -C bin_tests . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-pre-20150202.jar lib/rabbitmq-client.jar
 ```
 
