@@ -4,7 +4,7 @@
 
 The PLM judge was integrated back into the main PLM project
 (https://github.com/BuggleInc/PLM). This repository now only contains
-some slightly deprecated doc, and some old scripts.
+the documentation, and some old script and deprecated code chunks.
 
 ### Quick Start
 
@@ -16,62 +16,44 @@ sudo apt-get install rabbitmq-server
 Get the precompiled docker image:
 https://github.com/BuggleInc/plm-dockers/
 
-Compile the jar manually:
+Testing the judge manually:
 ```shell
-javac -g -d bin -sourcepath src -cp javac -g -d bin -sourcepath src -cp "lib/*" `find src -name '*.java'`
-jar cfe judge.jar main.java.Main -C bin . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-20151010.jar lib/rabbitmq-client.jar
+# Make sure that rabbitMQ is running locally
+$ sudo rabbitmqctl list_queues
+# This should report this line (at least): worker_in     0
+
+# Start enough judges for a sbt test in webPLM (there is 306 tests right now)
+webPLM/deps/PLM$ ant dist
+webPLM/deps/PLM$ for i in `seq 306` ; do java -cp dist/plm-2.6-20151010.jar:.:bin:lib/rabbitmq-client.jar plm.judge.Main ; done
+
+# Start the server using the judge (in another terminal, but on the same host)
+webPLM$ PLM_EXECUTION_MODE=TRIBUNAL sbt start
+
+# Start the tests (in a third terminal) once the judge and the server are waiting
+webPLM$ sbt test
+
+# Kill all remaining judges (if any). Ctrl-C this command once it start complaining that no judge remain to be killed.
+$ while true ; do kill `ps aux|grep java|grep judge|cut -f2 -d' '`; done
+
+# Kill all leaked queues
+$ sudo rabbitmqctl stop_app
+$ sudo rabbitmqctl reset
+$ sudo rabbitmqctl start_app
 ```
 
+## TODO
 
-## Test cases
-
-Workers can be tested after modification by simple test cases.
-Note that the test cases are intended to handle the worker's use-cases, not the actual PLM compilation. As of now, this part already has tests in the PLM project itself.
-
-Start the judge from the source tree directly:
-```shell
-java -cp lib/plm-2.6-20151010.jar:.:bin:lib/rabbitmq-client.jar plm.judge.Main
-```
-
-Check that rabbitMQ is running: `sudo rabbitmqctl list_queues` should
-report: ```
-Listing queues
-worker_in     0
-```
-
-# The following is outdated, don't read
-
-The test manifest is : manifest_tests.txt
-It is advised to generate the JAR using the following commands :
-```shell
-javac -g -d bin_tests -sourcepath src -cp "lib/*" src/test/ValidTests.java
-jar cfm0 judge_tests.jar manifest_tests.txt -C bin_tests . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-pre-20150202.jar lib/rabbitmq-client.jar
-```
-
-You can then simply launch the tests using `java -jar judge_tests.jar`
-
-#### Adding test cases.
-
-The test cases are defined in src/tests/ValidTests.java
-
-The list of all test cases are as followed :
-```java
-		new ValidTests().initWithParams("lessons.welcome", "welcome.lessons.welcome.environment.Environment", "avance();");
-```
-
-
-## Generator
-
-As of 2015-08-05, the worker now has a "generator" function.
-The "split" branch of WebPLM is on its way to be stripped from the PLM jar file, as thus it can't generate world data, exercises lists and demonstrations "on demand" as it was done until now.
-Therefore, workers now have a build path intended to pre-generate JSON objects which contains these data.
-
-The generator compilation can be launched as followed :
-```shell
-javac -g -d bin_gen -sourcepath src -cp lib/* src/generator/Generator.java
-jar cfm0 judge_gen.jar manifest_gen.txt -C bin_gen . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-pre-20150202.jar lib/rabbitmq-client.jar
-```
-
-then, you can simply launch the `java -jar judge.gen.jar` command to generate both lessonWorld, lessonDemos and webPlmData folders content.
-You can also add the "-w", "-o" or "-d" options to change respectively the output world, demos and data folders.
-
+- Update the docker files now that the code was moved to PLM.jar
+- Update to rabbitMQ-client 5. I'm not even sure of the version currently used.
+  - The API changed slightly but I didn't checked in all details
+- Move that documentation to a better location (PLM wiki?)
+- Unit test the judge.
+  - We don't want to rerun all the exercises here, but simply to test:
+    - The judge can compile a working code in all languages
+    - A code not compiling is correctly handled
+    - A code raising an exception is correctly handled
+    - A code timeouting is correctly handled
+    - Running the tests in parallel should be possible
+  - There is some code for that in test/ but it's completely
+    deprecated: it's using a server API that does not exist anymore. 
+    Plus, it was not using jUnit
