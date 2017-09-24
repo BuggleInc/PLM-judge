@@ -1,11 +1,10 @@
 # WebPLM - Worker
 
-This is a standalone program intended to serve as the compilation unit
-for the Programmer's Learning Machine (PLM).
+**THIS REPOSITORY IS DEPRECATED**
 
-The PLM project can be found at : https://github.com/BuggleInc/PLM
-
-The WebPLM project can be found at : https://github.com/BuggleInc/webPLM
+The PLM judge was integrated back into the main PLM project
+(https://github.com/BuggleInc/PLM). This repository now only contains
+some slightly deprecated doc, and some old scripts.
 
 ### Quick Start
 
