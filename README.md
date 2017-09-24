@@ -1,10 +1,11 @@
-# WebPLM - Worker
+# PLM-judge -- sandboxing server for the PLM
 
 **THIS REPOSITORY IS DEPRECATED**
 
-The PLM judge was integrated back into the main PLM project
-(https://github.com/BuggleInc/PLM). This repository now only contains
-the documentation, and some old script and deprecated code chunks.
+The PLM judge (the sandboxing grading server) was integrated back into
+the main PLM project (https://github.com/BuggleInc/PLM). This
+repository now only contains the documentation (the current file), and
+some old scripts and deprecated code chunks.
 
 ### Quick Start
 
