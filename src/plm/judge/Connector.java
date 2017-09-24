@@ -1,4 +1,4 @@
-package main.java.server;
+package plm.judge;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -24,10 +24,10 @@ public class Connector {
 		try {
 			connection = factory.newConnection();
 		} catch (IOException e) {
-			Logger.log(2, "Host unknown. Aborting...");
+			Logger.error("Host unknown. Aborting...");
 			System.exit(1);
 	    } catch (TimeoutException e) {
-	    	Logger.log(2, "Host timed out. Aborting...");
+	    	Logger.error("Host timed out. Aborting...");
 			System.exit(1);
 		}
 	}

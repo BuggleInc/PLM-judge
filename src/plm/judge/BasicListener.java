@@ -1,4 +1,4 @@
-package main.java.server.listener;
+package plm.judge;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -10,7 +10,6 @@ import org.json.simple.JSONObject;
 
 import com.rabbitmq.client.Channel;
 
-import main.java.server.Connector;
 import plm.core.model.json.JSONUtils;
 import plm.universe.World;
 

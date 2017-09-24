@@ -1,4 +1,4 @@
-package main.java.server;
+package plm.judge;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -11,8 +11,6 @@ import java.util.concurrent.TimeoutException;
 
 import com.rabbitmq.client.Channel;
 
-import main.java.server.listener.BasicListener;
-import main.java.server.parser.RequestMsg;
 import plm.core.lang.ProgrammingLanguage;
 import plm.core.log.Logger;
 import plm.core.model.json.JSONUtils;

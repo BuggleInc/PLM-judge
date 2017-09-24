@@ -1,4 +1,4 @@
-package main.java.server.parser;
+package plm.judge;
 
 import java.io.IOException;
 import java.util.Locale;

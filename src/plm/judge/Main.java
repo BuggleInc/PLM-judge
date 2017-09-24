@@ -1,8 +1,10 @@
-package main.java;
+package plm.judge;
 
-import main.java.server.Connector;
-import main.java.server.Judge;
-import plm.core.lang.*;
+import plm.core.lang.LangBlockly;
+import plm.core.lang.LangJava;
+import plm.core.lang.LangPython;
+import plm.core.lang.LangScala;
+import plm.core.lang.ProgrammingLanguage;
 
 /**
  * The main class. This should be the entry point of the Judge.

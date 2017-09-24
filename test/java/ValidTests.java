@@ -1,10 +1,14 @@
 package test;
 
 import java.util.Locale;
-import server.GameGest;
 import server.Main;
 
 public class ValidTests {
+	ConnectionFactory factory = new ConnectionFactory();
+	factory.setHost("localhost");
+	Connection connection = factory.newConnection();
+	Channel channel = connection.createChannel();
+	
 	private static GameGest gest = null;
 	private static ConnectorTest connector = new ConnectorTest();
 	private static int testID = 1;

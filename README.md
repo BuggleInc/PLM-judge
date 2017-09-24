@@ -15,23 +15,32 @@ sudo apt-get install rabbitmq-server
 ```
 
 Get the precompiled docker image:
-https://github.com/BuggleInc/plm-dockers/tree/split
+https://github.com/BuggleInc/plm-dockers/
 
-Compile manually:
+Compile the jar manually:
 ```shell
 javac -g -d bin -sourcepath src -cp javac -g -d bin -sourcepath src -cp "lib/*" `find src -name '*.java'`
 jar cfe judge.jar main.java.Main -C bin . lib/commons-cli-1.1.jar lib/commons-io-1.2.jar lib/plm-2.6-20151010.jar lib/rabbitmq-client.jar
 ```
 
-Start it:
-```shell
-java -cp "lib/*" -jar judge.jar
-```
 
 ## Test cases
 
 Workers can be tested after modification by simple test cases.
 Note that the test cases are intended to handle the worker's use-cases, not the actual PLM compilation. As of now, this part already has tests in the PLM project itself.
+
+Start the judge from the source tree directly:
+```shell
+java -cp lib/plm-2.6-20151010.jar:.:bin:lib/rabbitmq-client.jar plm.judge.Main
+```
+
+Check that rabbitMQ is running: `sudo rabbitmqctl list_queues` should
+report: ```
+Listing queues
+worker_in     0
+```
+
+# The following is outdated, don't read
 
 The test manifest is : manifest_tests.txt
 It is advised to generate the JAR using the following commands :
