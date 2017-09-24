@@ -58,3 +58,17 @@ $ sudo rabbitmqctl start_app
   - There is some code for that in test/ but it's completely
     deprecated: it's using a server API that does not exist anymore. 
     Plus, it was not using jUnit
+- Reduce the amount of queues for improved performance. 
+  - Currently, we have:
+    - UI.js -> server.play: websocket
+      Contains: code+exoID+lang
+    - server -> judge: rabbitMQ on queue worker_in 
+      Contains: code+exoID+lang+replyQueueID
+      See TribunalActor.scala variable replyQueue
+    - judge -> server: rabbitMQ on replyQueueID
+      Contains: exec outcome (passed/compileError/execError/mismatch)
+    - judge -> UI.js: rabbitMQ on replyQueueID-client
+      Contains: the stream of operations
+  - But the rabbitMQ tutorials say that short-lived queues are
+    inefficient, so we should change that. 
+    See http://www.rabbitmq.com/tutorials/tutorial-six-java.html
