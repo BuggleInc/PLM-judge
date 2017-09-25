@@ -36,7 +36,7 @@ def retrieve_start_time(judge_name):
 
     started_date = date(year, month, day)
 
-    hour = int(started_time[0]) + 2 # To use the set timezone as now()
+    hour = (int(started_time[0]) + 2) % 24 # To use the set timezone as now()
     minute = int(started_time[1])
     second = int(started_time[2])
 
